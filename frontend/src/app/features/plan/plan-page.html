@@ -1,0 +1,335 @@
+<section class="plan-page">
+  <header class="page-header">
+    <div>
+      <h1>Plan &amp; usage</h1>
+      <p class="subtitle">
+        See what you can create on your plan, how much you’ve used this period, and what Pro unlocks.
+      </p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="state" role="status" aria-live="polite">
+      <mat-spinner diameter="40" />
+      <p>Loading plan…</p>
+    </div>
+  } @else if (error(); as err) {
+    <div class="state state-error" role="alert">
+      <p>{{ err }}</p>
+      <button mat-flat-button color="primary" type="button" (click)="reload()">Retry</button>
+    </div>
+  } @else if (entitlements(); as e) {
+    <section class="plan-hero" aria-labelledby="current-plan-heading">
+      <div class="hero-copy">
+        <p class="eyebrow" id="current-plan-heading">Current plan</p>
+        <h2 class="plan-name">{{ e.planDisplayName }} plan</h2>
+        <p class="hero-status">{{ limitHeadline(e) }}</p>
+        <p class="period">
+          Usage period
+          <time [attr.datetime]="e.period.from">{{ e.period.from }}</time>
+          –
+          <time [attr.datetime]="e.period.to">{{ e.period.to }}</time>
+          · {{ e.period.timezone }}
+        </p>
+      </div>
+      <ul class="hero-meters" aria-label="Usage at a glance">
+        <li>
+          <span class="hm-label">Customers</span>
+          <strong>{{ formatUsageCompact(e.limits.activeCustomers) }}</strong>
+        </li>
+        <li>
+          <span class="hm-label">Quotations</span>
+          <strong>{{ formatUsageCompact(e.limits.quotationsThisMonth) }}</strong>
+        </li>
+        <li>
+          <span class="hm-label">Invoices</span>
+          <strong>{{ formatUsageCompact(e.limits.invoicesThisMonth) }}</strong>
+        </li>
+      </ul>
+        <div class="hero-actions">
+          <a mat-flat-button color="primary" href="#compare-heading">Compare plans</a>
+          <a mat-stroked-button href="#pro-highlight">See what Pro includes</a>
+          @if (isOwner && e.plan !== 'FREE' && !e.cancelAtPeriodEnd && e.billingCheckoutAvailable) {
+            <button
+              mat-button
+              type="button"
+              class="cancel-link"
+              [disabled]="cancelBusy()"
+              (click)="cancelPaidPlan()"
+            >
+              Cancel at period end
+            </button>
+          }
+        </div>
+        @if (checkoutMessage(); as msg) {
+          <p class="checkout-msg" role="status" aria-live="polite">{{ msg }}</p>
+        }
+      </section>
+
+    <section class="usage" aria-labelledby="usage-heading">
+      <h2 id="usage-heading">Usage this period</h2>
+      <ul class="usage-list">
+        <li [class.at-limit]="isAtLimit(e.limits.activeCustomers)">
+          <span class="qf-icon-surface qf-icon-surface--secondary" aria-hidden="true">
+            <mat-icon>groups</mat-icon>
+          </span>
+          <div class="usage-body">
+            <div class="usage-row">
+              <span class="usage-label">Active customers</span>
+              <span class="usage-value">{{ formatUsage(e.limits.activeCustomers) }}</span>
+            </div>
+            <div
+              class="meter"
+              role="meter"
+              [attr.aria-valuenow]="e.limits.activeCustomers.used"
+              [attr.aria-valuemin]="0"
+              [attr.aria-valuemax]="e.limits.activeCustomers.limit ?? undefined"
+              [attr.aria-label]="'Active customers: ' + formatUsage(e.limits.activeCustomers)"
+            >
+              <div
+                class="meter-fill"
+                [style.width.%]="
+                  usagePercent(
+                    e.limits.activeCustomers.used,
+                    e.limits.activeCustomers.limit,
+                    e.limits.activeCustomers.unlimited
+                  )
+                "
+              ></div>
+            </div>
+            @if (isAtLimit(e.limits.activeCustomers)) {
+              <p class="limit-note">Limit reached</p>
+            }
+          </div>
+        </li>
+        <li [class.at-limit]="isAtLimit(e.limits.quotationsThisMonth)">
+          <span class="qf-icon-surface qf-icon-surface--primary" aria-hidden="true">
+            <mat-icon>description</mat-icon>
+          </span>
+          <div class="usage-body">
+            <div class="usage-row">
+              <span class="usage-label">Quotations this month</span>
+              <span class="usage-value">{{ formatUsage(e.limits.quotationsThisMonth) }}</span>
+            </div>
+            <div
+              class="meter"
+              role="meter"
+              [attr.aria-valuenow]="e.limits.quotationsThisMonth.used"
+              [attr.aria-valuemin]="0"
+              [attr.aria-valuemax]="e.limits.quotationsThisMonth.limit ?? undefined"
+              [attr.aria-label]="'Quotations this month: ' + formatUsage(e.limits.quotationsThisMonth)"
+            >
+              <div
+                class="meter-fill"
+                [style.width.%]="
+                  usagePercent(
+                    e.limits.quotationsThisMonth.used,
+                    e.limits.quotationsThisMonth.limit,
+                    e.limits.quotationsThisMonth.unlimited
+                  )
+                "
+              ></div>
+            </div>
+            @if (isAtLimit(e.limits.quotationsThisMonth)) {
+              <p class="limit-note">Limit reached</p>
+            }
+          </div>
+        </li>
+        <li [class.at-limit]="isAtLimit(e.limits.invoicesThisMonth)">
+          <span class="qf-icon-surface qf-icon-surface--accent" aria-hidden="true">
+            <mat-icon>receipt_long</mat-icon>
+          </span>
+          <div class="usage-body">
+            <div class="usage-row">
+              <span class="usage-label">Invoices this month</span>
+              <span class="usage-value">{{ formatUsage(e.limits.invoicesThisMonth) }}</span>
+            </div>
+            <div
+              class="meter"
+              role="meter"
+              [attr.aria-valuenow]="e.limits.invoicesThisMonth.used"
+              [attr.aria-valuemin]="0"
+              [attr.aria-valuemax]="e.limits.invoicesThisMonth.limit ?? undefined"
+              [attr.aria-label]="'Invoices this month: ' + formatUsage(e.limits.invoicesThisMonth)"
+            >
+              <div
+                class="meter-fill"
+                [style.width.%]="
+                  usagePercent(
+                    e.limits.invoicesThisMonth.used,
+                    e.limits.invoicesThisMonth.limit,
+                    e.limits.invoicesThisMonth.unlimited
+                  )
+                "
+              ></div>
+            </div>
+            @if (isAtLimit(e.limits.invoicesThisMonth)) {
+              <p class="limit-note">Limit reached</p>
+            }
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <section class="features" aria-labelledby="features-heading">
+      <h2 id="features-heading">Included with {{ e.planDisplayName }}</h2>
+      <ul class="capability-list">
+        <li class="included">
+          <mat-icon aria-hidden="true">check_circle</mat-icon>
+          <span>Professional quotations and invoices</span>
+        </li>
+        <li class="included">
+          <mat-icon aria-hidden="true">check_circle</mat-icon>
+          <span>Payment tracking</span>
+        </li>
+        <li class="included">
+          <mat-icon aria-hidden="true">check_circle</mat-icon>
+          <span>Business dashboard</span>
+        </li>
+        <li class="included">
+          <mat-icon aria-hidden="true">check_circle</mat-icon>
+          <span>PDF documents</span>
+        </li>
+        @if (e.features.removeQuoteFlowBranding) {
+          <li class="included">
+            <mat-icon aria-hidden="true">check_circle</mat-icon>
+            <span>Your branding on customer PDFs</span>
+          </li>
+        } @else {
+          <li class="soft">
+            <mat-icon aria-hidden="true">radio_button_unchecked</mat-icon>
+            <span>QuoteFlow branding included on documents</span>
+          </li>
+        }
+        @if (e.plan === 'FREE') {
+          <li class="soft">
+            <mat-icon aria-hidden="true">radio_button_unchecked</mat-icon>
+            <span>Up to 5 active customers, quotations, and invoices per month</span>
+          </li>
+        } @else {
+          <li class="included">
+            <mat-icon aria-hidden="true">check_circle</mat-icon>
+            <span>Unlimited customers, quotations, and invoices</span>
+          </li>
+        }
+        @if (e.plan === 'BUSINESS') {
+          <li class="soft">
+            <mat-icon aria-hidden="true">schedule</mat-icon>
+            <span>Multi-user seats entitled — invites coming later</span>
+          </li>
+        } @else {
+          <li class="soft">
+            <mat-icon aria-hidden="true">schedule</mat-icon>
+            <span>Multi-user seats — coming later on Business</span>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="compare" aria-labelledby="compare-heading">
+      <div class="compare-head">
+        <h2 id="compare-heading">Compare plans</h2>
+        @if (e.billingCheckoutAvailable) {
+          <p class="disclaimer">
+            Choose a billing interval, then upgrade securely with Razorpay. Secrets never leave our server.
+          </p>
+          <mat-button-toggle-group
+            class="interval-toggle"
+            [value]="selectedInterval()"
+            (change)="selectedInterval.set($event.value)"
+            aria-label="Billing interval"
+          >
+            <mat-button-toggle value="MONTHLY">Monthly</mat-button-toggle>
+            <mat-button-toggle value="ANNUAL">Annual</mat-button-toggle>
+          </mat-button-toggle-group>
+        } @else {
+          <p class="disclaimer">
+            Online checkout is unavailable in this environment. Your Free workspace still works normally.
+          </p>
+        }
+      </div>
+      <div class="plan-cards">
+        @for (item of catalog(); track item.id) {
+          <article
+            class="plan-card"
+            [class.current]="isCurrent(item.id)"
+            [class.featured]="item.id === 'PRO'"
+            [attr.id]="item.id === 'PRO' ? 'pro-highlight' : null"
+          >
+            <div class="card-top">
+              <h3>{{ item.displayName }}</h3>
+              @if (item.id === 'PRO') {
+                <p class="badge">Best for growing businesses</p>
+              } @else if (item.id === 'FREE') {
+                <p class="badge muted-badge">For getting started</p>
+              } @else if (item.id === 'BUSINESS') {
+                <p class="badge muted-badge">For teams</p>
+              }
+              @if (isCurrent(item.id)) {
+                <p class="current-pill">Current plan</p>
+              }
+            </div>
+            <p class="price">
+              @if (item.id === 'PRO' && selectedInterval() === 'ANNUAL' && item.yearlyPriceDisplay) {
+                {{ item.yearlyPriceDisplay }}
+              } @else {
+                {{ item.monthlyPriceDisplay }}
+              }
+            </p>
+            @if (annualSavingsLabel(item.id); as save) {
+              <p class="price-alt save">{{ save }}</p>
+            } @else if (item.yearlyPriceDisplay && item.id === 'PRO' && selectedInterval() === 'MONTHLY') {
+              <p class="price-alt">or {{ item.yearlyPriceDisplay }}</p>
+            }
+            <ul class="plan-benefits">
+              @if (item.id === 'FREE') {
+                <li>Up to {{ limitLabel(item.activeCustomerLimit) }} active customers</li>
+                <li>{{ limitLabel(item.quotationsPerMonth) }} quotations / month</li>
+                <li>{{ limitLabel(item.invoicesPerMonth) }} invoices / month</li>
+                <li>QuoteFlow branding on PDFs</li>
+              } @else if (item.id === 'PRO') {
+                <li>Unlimited core usage</li>
+                <li>Remove QuoteFlow branding</li>
+                <li>Everything on Free</li>
+              } @else {
+                <li>Includes Pro</li>
+                <li>Multi-user seats — coming later</li>
+                <li>{{ item.monthlyPriceDisplay }}</li>
+              }
+            </ul>
+            @if (isCurrent(item.id)) {
+              <button mat-stroked-button type="button" disabled>Your current plan</button>
+            } @else if (canUpgrade(item.id)) {
+              <button
+                mat-flat-button
+                color="primary"
+                type="button"
+                [disabled]="checkoutBusy()"
+                [attr.aria-label]="'Upgrade to ' + item.displayName"
+                (click)="upgrade(item.id)"
+              >
+                @if (checkoutBusy()) {
+                  Starting checkout…
+                } @else {
+                  Upgrade to {{ item.displayName }}
+                }
+              </button>
+            } @else if (!e.billingCheckoutAvailable || !item.billingAvailable) {
+              <button mat-stroked-button type="button" disabled>
+                Upgrade unavailable
+              </button>
+            } @else if (!isOwner) {
+              <button mat-stroked-button type="button" disabled>
+                Only the owner can upgrade
+              </button>
+            } @else {
+              <button mat-stroked-button type="button" disabled>
+                Upgrade unavailable
+              </button>
+            }
+          </article>
+        }
+      </div>
+    </section>
+  }
+</section>

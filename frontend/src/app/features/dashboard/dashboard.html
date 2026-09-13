@@ -1,0 +1,281 @@
+<section class="dashboard">
+  <header class="page-header">
+    <div class="header-main">
+      <div>
+        <h1>Business overview</h1>
+        <p class="subtitle">
+          @if (user(); as u) {
+            {{ u.businessName }}
+          } @else {
+            Tenant dashboard
+          }
+        </p>
+      </div>
+      <div class="header-actions">
+        @if (planLabel(); as plan) {
+          <a
+            mat-stroked-button
+            routerLink="/app/plan"
+            class="plan-chip"
+            [attr.aria-label]="'Plan and usage, current plan ' + plan"
+          >
+            Plan: {{ plan }}
+          </a>
+        }
+        <mat-form-field appearance="outline" class="period-select" subscriptSizing="dynamic">
+          <mat-label>Period</mat-label>
+          <mat-select
+            [value]="preset()"
+            (selectionChange)="applyPreset($event.value)"
+            aria-label="Reporting period"
+          >
+            <mat-option value="this_month">This month</mat-option>
+            <mat-option value="last_30">Last 30 days</mat-option>
+            <mat-option value="this_year">This year</mat-option>
+            <mat-option value="custom">Custom</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    @if (summary(); as s) {
+      <p class="period-meta">
+        <time [attr.datetime]="s.from">{{ s.from }}</time>
+        –
+        <time [attr.datetime]="s.to">{{ s.to }}</time>
+        · {{ s.timezone }}
+      </p>
+    }
+
+    @if (preset() === 'custom') {
+      <form class="custom-range" [formGroup]="customForm" (ngSubmit)="applyCustomRange()">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>From</mat-label>
+          <input matInput type="date" formControlName="from" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>To</mat-label>
+          <input matInput type="date" formControlName="to" />
+        </mat-form-field>
+        <button mat-flat-button color="primary" type="submit">Apply</button>
+      </form>
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="state" role="status" aria-live="polite">
+      <mat-spinner diameter="40" />
+      <p>Loading overview…</p>
+    </div>
+  } @else if (error()) {
+    <div class="state state-error" role="alert">
+      <p>{{ error() }}</p>
+      <button mat-flat-button color="primary" type="button" (click)="retry()">Retry</button>
+    </div>
+  } @else if (summary(); as s) {
+    @if (isQuietTenant(s)) {
+      <aside class="guide-banner" aria-labelledby="guide-heading">
+        <div>
+          <h2 id="guide-heading">No invoices yet</h2>
+          <p>
+            Create a quotation and convert it to an invoice to start tracking collections.
+            Your metrics below stay at zero until you do.
+          </p>
+        </div>
+        <a mat-flat-button color="primary" routerLink="/app/quotations/new">Create quotation</a>
+      </aside>
+    }
+
+    <section class="cards" aria-label="Summary metrics">
+      <article class="metric-card kpi-invoiced">
+        <div class="kpi-top">
+          <span class="qf-icon-surface qf-icon-surface--primary" aria-hidden="true">
+            <mat-icon>receipt_long</mat-icon>
+          </span>
+          <h2>Invoiced</h2>
+        </div>
+        <p class="value" [class.value-empty]="!hasMoney(s.invoices.invoicedAmountByCurrency)" aria-label="Invoiced amounts by currency">
+          {{ formatMoneyList(s.invoices.invoicedAmountByCurrency) }}
+        </p>
+        <p class="hint">
+          @if (s.invoices.sentCount === 0) {
+            No SENT invoices in this period
+          } @else {
+            {{ s.invoices.sentCount }} SENT invoice(s) by issue date
+          }
+        </p>
+      </article>
+      <article class="metric-card kpi-collected">
+        <div class="kpi-top">
+          <span class="qf-icon-surface qf-icon-surface--success" aria-hidden="true">
+            <mat-icon>payments</mat-icon>
+          </span>
+          <h2>Collected</h2>
+        </div>
+        <p class="value" [class.value-empty]="!hasMoney(s.payments.collectedAmountByCurrency)" aria-label="Collected amounts by currency">
+          {{ formatMoneyList(s.payments.collectedAmountByCurrency) }}
+        </p>
+        <p class="hint">
+          @if (s.payments.recordedCount === 0) {
+            No recorded payments yet
+          } @else {
+            {{ s.payments.recordedCount }} payment(s) by payment date
+          }
+        </p>
+      </article>
+      <article class="metric-card kpi-outstanding">
+        <div class="kpi-top">
+          <span class="qf-icon-surface qf-icon-surface--accent" aria-hidden="true">
+            <mat-icon>pending_actions</mat-icon>
+          </span>
+          <h2>Outstanding</h2>
+        </div>
+        <p class="value" [class.value-empty]="!hasMoney(s.invoices.outstandingAmountByCurrency)" aria-label="Outstanding amounts by currency">
+          {{ formatMoneyList(s.invoices.outstandingAmountByCurrency) }}
+        </p>
+        <p class="hint">Balance due on SENT invoices in this period</p>
+      </article>
+      <article class="metric-card kpi-customers">
+        <div class="kpi-top">
+          <span class="qf-icon-surface qf-icon-surface--secondary" aria-hidden="true">
+            <mat-icon>groups</mat-icon>
+          </span>
+          <h2>Customers</h2>
+        </div>
+        <p class="value">{{ s.customers.activeCount }}</p>
+        <p class="hint">
+          Active · {{ s.customers.newInPeriodCount }} new
+          @if (s.customers.archivedCount) {
+            · {{ s.customers.archivedCount }} archived
+          }
+        </p>
+      </article>
+    </section>
+
+    <section class="split" aria-label="Status counts">
+      <article class="panel panel-secondary">
+        <h2>Invoice payment status</h2>
+        <ul class="stat-list">
+          <li>
+            <span class="stat-label"><span class="dot unpaid" aria-hidden="true"></span> Unpaid</span>
+            <strong>{{ s.invoices.unpaidCount }}</strong>
+          </li>
+          <li>
+            <span class="stat-label"><span class="dot partial" aria-hidden="true"></span> Partially paid</span>
+            <strong>{{ s.invoices.partiallyPaidCount }}</strong>
+          </li>
+          <li>
+            <span class="stat-label"><span class="dot paid" aria-hidden="true"></span> Paid</span>
+            <strong>{{ s.invoices.paidCount }}</strong>
+          </li>
+          <li>
+            <span class="stat-label"><span class="dot draft" aria-hidden="true"></span> Draft</span>
+            <strong>{{ s.invoices.draftCount }}</strong>
+          </li>
+          <li>
+            <span class="stat-label"><span class="dot cancelled" aria-hidden="true"></span> Cancelled</span>
+            <strong>{{ s.invoices.cancelledCount }}</strong>
+          </li>
+        </ul>
+      </article>
+      <article class="panel panel-secondary">
+        <h2>Quotations</h2>
+        <ul class="stat-list">
+          <li>
+            <span class="stat-label"><span class="dot draft" aria-hidden="true"></span> Draft</span>
+            <strong>{{ s.quotations.draftCount }}</strong>
+          </li>
+          <li>
+            <span class="stat-label"><span class="dot sent" aria-hidden="true"></span> Sent</span>
+            <strong>{{ s.quotations.sentCount }}</strong>
+          </li>
+          <li>
+            <span class="stat-label"><span class="dot cancelled" aria-hidden="true"></span> Cancelled</span>
+            <strong>{{ s.quotations.cancelledCount }}</strong>
+          </li>
+          <li>
+            <span class="stat-label"><span class="dot paid" aria-hidden="true"></span> Converted</span>
+            <strong>{{ s.quotations.convertedCount }}</strong>
+          </li>
+        </ul>
+        <p class="hint">Quoted (draft+sent): {{ formatMoneyList(s.quotations.quotedAmountByCurrency) }}</p>
+      </article>
+    </section>
+
+    <section class="panel panel-secondary" aria-labelledby="collections-heading">
+      <h2 id="collections-heading">Collections over time</h2>
+      @if (s.collectionsSeries.length === 0) {
+        <p class="empty">No recorded collections in this period.</p>
+      } @else {
+        <div class="chart" role="img" [attr.aria-label]="'Collections ' + s.collectionsSeries[0].granularity.toLowerCase()">
+          @for (point of s.collectionsSeries; track point.periodStart + point.currency) {
+            <div class="bar-col">
+              <div
+                class="bar"
+                [style.height.%]="barHeight(point.amount)"
+                [attr.title]="point.currency + ' ' + point.amount"
+              ></div>
+              <span class="bar-label">{{ point.periodStart | date: (point.granularity === 'MONTHLY' ? 'MMM y' : 'd MMM') }}</span>
+              <span class="bar-value">{{ point.amount | currency: point.currency }}</span>
+            </div>
+          }
+        </div>
+        <table class="sr-table">
+          <caption>Collections series (accessible table)</caption>
+          <thead>
+            <tr>
+              <th scope="col">Period</th>
+              <th scope="col">Currency</th>
+              <th scope="col">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (point of s.collectionsSeries; track point.periodStart + point.currency + 't') {
+              <tr>
+                <td>{{ point.periodStart }}</td>
+                <td>{{ point.currency }}</td>
+                <td>{{ point.amount | currency: point.currency }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+
+    <section class="activity" aria-label="Recent activity">
+      <article class="panel panel-secondary">
+        <h2>Recent invoices</h2>
+        @if (s.recentInvoices.length === 0) {
+          <p class="empty">No invoices yet. <a routerLink="/app/invoices/new">Create an invoice</a></p>
+        } @else {
+          <ul class="activity-list">
+            @for (inv of s.recentInvoices; track inv.id) {
+              <li>
+                <a [routerLink]="['/app/invoices', inv.id]">{{ inv.invoiceNumber }}</a>
+                <span class="muted">{{ inv.customerDisplayName }} · {{ inv.issueDate | date: 'mediumDate' }}</span>
+                <span>{{ inv.totalAmount | currency: inv.currency }}</span>
+                <span class="qf-chip" [class]="'qf-chip--' + inv.status.toLowerCase()">{{ inv.status }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+      <article class="panel panel-secondary">
+        <h2>Recent payments</h2>
+        @if (s.recentPayments.length === 0) {
+          <p class="empty">No payments recorded yet.</p>
+        } @else {
+          <ul class="activity-list">
+            @for (pay of s.recentPayments; track pay.id) {
+              <li>
+                <a [routerLink]="['/app/invoices', pay.invoiceId]">{{ pay.receiptNumber }}</a>
+                <span class="muted">{{ pay.invoiceNumber }} · {{ pay.paymentDate | date: 'mediumDate' }} · {{ pay.paymentMethod }}</span>
+                <span>{{ pay.amount | currency: pay.currency }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+    </section>
+  }
+</section>

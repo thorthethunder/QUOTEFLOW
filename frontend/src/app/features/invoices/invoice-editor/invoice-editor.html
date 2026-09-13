@@ -1,0 +1,158 @@
+<section class="invoice-editor">
+  <header class="page-header">
+    <div>
+      <h1>{{ isEdit ? 'Edit invoice' : 'New invoice' }}</h1>
+      <p class="subtitle">Totals shown while editing are a preview. Saved values come from the server.</p>
+    </div>
+    <a mat-button routerLink="/app/invoices">Back to list</a>
+  </header>
+
+  @if (loading()) {
+    <div class="state" role="status"><mat-spinner diameter="36"></mat-spinner><span>Loading…</span></div>
+  } @else if (loadError(); as err) {
+    <div class="state state-error" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ err }}</p>
+      <a mat-stroked-button routerLink="/app/invoices">Back</a>
+    </div>
+  } @else {
+    @if (planLimitHint(); as hint) {
+      <div class="form-alert" role="status">
+        <mat-icon>workspace_premium</mat-icon>
+        <span>{{ hint }}</span>
+        <a mat-stroked-button routerLink="/app/plan">View plans</a>
+      </div>
+    }
+    @if (errorMessage(); as err) {
+      <div class="form-alert" role="alert">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ err }}</span>
+        @if (showViewPlans()) {
+          <a mat-stroked-button routerLink="/app/plan">View plans</a>
+        }
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="editor-form">
+      <fieldset>
+        <legend>Customer</legend>
+        <mat-form-field appearance="outline" class="full" subscriptSizing="dynamic">
+          <mat-label>Find customer</mat-label>
+          <input matInput [formControl]="customerSearch" autocomplete="off" aria-label="Search customers" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Customer</mat-label>
+          <mat-select formControlName="customerId" required>
+            @for (c of customerOptions(); track c.id) {
+              <mat-option [value]="c.id">{{ c.displayName }}@if (c.companyName) { — {{ c.companyName }} }</mat-option>
+            }
+          </mat-select>
+          @if (form.controls.customerId.touched && form.controls.customerId.invalid) {
+            <mat-error>Select a customer.</mat-error>
+          }
+        </mat-form-field>
+      </fieldset>
+
+      <fieldset>
+        <legend>Invoice details</legend>
+        <div class="grid-2">
+          <mat-form-field appearance="outline">
+            <mat-label>Issue date</mat-label>
+            <input matInput type="date" formControlName="issueDate" required />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Due date</mat-label>
+            <input matInput type="date" formControlName="dueDate" />
+          </mat-form-field>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Line items</legend>
+        <div formArrayName="items" class="items">
+          @for (item of items.controls; track $index; let i = $index) {
+            <div class="item-card" [formGroupName]="i">
+              <mat-form-field appearance="outline" class="full">
+                <mat-label>Description</mat-label>
+                <input matInput formControlName="description" required />
+              </mat-form-field>
+              <div class="grid-2">
+                <mat-form-field appearance="outline">
+                  <mat-label>Quantity</mat-label>
+                  <input matInput type="number" step="0.0001" min="0.0001" formControlName="quantity" required />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Unit price</mat-label>
+                  <input matInput type="number" step="0.01" min="0" formControlName="unitPrice" required />
+                </mat-form-field>
+              </div>
+              <button mat-button type="button" color="warn" (click)="removeItem(i)" [disabled]="items.length <= 1" [attr.aria-label]="'Remove line ' + (i + 1)">
+                Remove line
+              </button>
+            </div>
+          }
+        </div>
+        <button mat-stroked-button type="button" (click)="addItem()" class="add-line">
+          <mat-icon>add</mat-icon>
+          Add line
+        </button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Discount & tax</legend>
+        <div class="grid-3">
+          <mat-form-field appearance="outline">
+            <mat-label>Discount type</mat-label>
+            <mat-select formControlName="discountType">
+              <mat-option value="NONE">None</mat-option>
+              <mat-option value="PERCENTAGE">Percentage</mat-option>
+              <mat-option value="FIXED">Fixed amount</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Discount value</mat-label>
+            <input matInput type="number" min="0" step="0.01" formControlName="discountValue" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Tax rate %</mat-label>
+            <input matInput type="number" min="0" max="100" step="0.01" formControlName="taxRate" />
+          </mat-form-field>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Notes & terms</legend>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Notes</mat-label>
+          <textarea matInput rows="3" formControlName="notes" maxlength="4000"></textarea>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Terms</mat-label>
+          <textarea matInput rows="3" formControlName="terms" maxlength="4000"></textarea>
+        </mat-form-field>
+      </fieldset>
+
+      <aside class="totals" aria-live="polite">
+        <h2>Totals preview</h2>
+        <dl>
+          <div><dt>Subtotal</dt><dd>{{ preview().subtotal | currency: currency() }}</dd></div>
+          <div><dt>Discount</dt><dd>{{ preview().discountAmount | currency: currency() }}</dd></div>
+          <div><dt>Tax</dt><dd>{{ preview().taxAmount | currency: currency() }}</dd></div>
+          <div class="grand"><dt>Total</dt><dd>{{ preview().totalAmount | currency: currency() }}</dd></div>
+        </dl>
+        <p class="hint">Server recalculates and stores authoritative amounts on save.</p>
+      </aside>
+
+      <div class="actions">
+        <a mat-button routerLink="/app/invoices">Cancel</a>
+        <button mat-flat-button color="primary" type="submit" [disabled]="submitting()">
+          @if (submitting()) {
+            <mat-spinner diameter="20" aria-label="Saving"></mat-spinner>
+          } @else {
+            Save draft
+          }
+        </button>
+      </div>
+    </form>
+  }
+</section>

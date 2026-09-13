@@ -1,0 +1,12 @@
+# Local development profile. Safe defaults for Docker Compose PostgreSQL.
+# Usage: --spring.profiles.active=dev
+# Development DB password is for local use only — never reuse in production.
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+logging:
+  level:
+    com.quoteflow: DEBUG

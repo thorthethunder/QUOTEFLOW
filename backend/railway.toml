@@ -1,0 +1,14 @@
+# Railway service hints (set Root Directory = backend in the Railway UI,
+# or point Dockerfile path to backend/Dockerfile with context backend).
+# This file is documentation-as-config; confirm in Railway dashboard that
+# the Dockerfile builder is selected (not a Java buildpack).
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/actuator/health/readiness"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

@@ -1,0 +1,117 @@
+server:
+  # Local default 8080. Railway/PaaS: set PORT (prod profile also maps PORT).
+  port: ${PORT:${SERVER_PORT:8080}}
+  shutdown: graceful
+
+spring:
+  application:
+    name: quoteflow-backend
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  datasource:
+    # Local defaults are development-only. Production profile requires explicit env vars.
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/quoteflow}
+    username: ${DATABASE_USERNAME:quoteflow}
+    password: ${DATABASE_PASSWORD:quoteflow}
+    driver-class-name: org.postgresql.Driver
+    # HikariCP is Spring Boot's default pool. Keep conservative defaults.
+    hikari:
+      pool-name: quoteflow-hikari
+      maximum-pool-size: ${HIKARI_MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${HIKARI_MINIMUM_IDLE:2}
+      connection-timeout: ${HIKARI_CONNECTION_TIMEOUT:30000}
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway owns schema evolution. Hibernate validates only.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    # Phase 2+: migrations exist. Override with FLYWAY_ENABLED=false only for special cases.
+    enabled: ${FLYWAY_ENABLED:true}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+
+quoteflow:
+  security:
+    jwt:
+      # Development-only default. Production profile rejects weak/missing secrets.
+      secret: ${JWT_SECRET:local-dev-only-quoteflow-jwt-signing-secret-min-32-chars}
+      issuer: ${JWT_ISSUER:quoteflow}
+      audience: ${JWT_AUDIENCE:quoteflow-api}
+      access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:15m}
+      refresh-token-ttl: ${JWT_REFRESH_TOKEN_TTL:14d}
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://127.0.0.1:4200}
+    bcrypt-strength: ${BCRYPT_STRENGTH:12}
+    auth-rate-limit:
+      enabled: ${AUTH_RATE_LIMIT_ENABLED:true}
+      register-per-minute: ${AUTH_RATE_LIMIT_REGISTER:10}
+      login-per-minute: ${AUTH_RATE_LIMIT_LOGIN:20}
+      refresh-per-minute: ${AUTH_RATE_LIMIT_REFRESH:60}
+    refresh-cookie:
+      name: ${REFRESH_COOKIE_NAME:qf_refresh}
+      path: /api/v1/auth
+      # Local HTTP: Secure=false. Production profile sets Secure=true.
+      secure: ${REFRESH_COOKIE_SECURE:false}
+      same-site: ${REFRESH_COOKIE_SAME_SITE:Lax}
+      # Browsers use HttpOnly cookie only. Tests may enable body return.
+      return-in-body: ${REFRESH_TOKEN_RETURN_IN_BODY:false}
+  billing:
+    enabled: ${BILLING_ENABLED:false}
+    provider: ${BILLING_PROVIDER:RAZORPAY}
+    razorpay:
+      key-id: ${RAZORPAY_KEY_ID:}
+      key-secret: ${RAZORPAY_KEY_SECRET:}
+      webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
+      api-base-url: ${RAZORPAY_API_BASE_URL:https://api.razorpay.com/v1}
+      connect-timeout: ${RAZORPAY_CONNECT_TIMEOUT:5s}
+      read-timeout: ${RAZORPAY_READ_TIMEOUT:15s}
+      pro-monthly-plan-id: ${RAZORPAY_PRO_MONTHLY_PLAN_ID:}
+      pro-annual-plan-id: ${RAZORPAY_PRO_ANNUAL_PLAN_ID:}
+      business-monthly-plan-id: ${RAZORPAY_BUSINESS_MONTHLY_PLAN_ID:}
+      monthly-total-count: ${RAZORPAY_MONTHLY_TOTAL_COUNT:120}
+      annual-total-count: ${RAZORPAY_ANNUAL_TOTAL_COUNT:10}
+  email:
+    provider: ${EMAIL_PROVIDER:CONSOLE}
+    from-email: ${EMAIL_FROM:noreply@quoteflow.local}
+    from-name: ${EMAIL_FROM_NAME:QuoteFlow}
+    max-attempts: ${EMAIL_MAX_ATTEMPTS:4}
+    worker-batch-size: ${EMAIL_WORKER_BATCH_SIZE:20}
+    worker-interval: ${EMAIL_WORKER_INTERVAL:5s}
+    claim-lease: ${EMAIL_CLAIM_LEASE:10m}
+    worker-enabled: ${EMAIL_WORKER_ENABLED:true}
+    max-pdf-attachment-bytes: ${EMAIL_MAX_PDF_BYTES:2000000}
+    max-custom-message-length: 500
+    per-tenant-per-minute: ${EMAIL_RATE_TENANT:30}
+    per-document-per-minute: ${EMAIL_RATE_DOCUMENT:5}
+    resend:
+      api-key: ${RESEND_API_KEY:}
+      api-base-url: ${RESEND_API_BASE_URL:https://api.resend.com}
+      connect-timeout: ${RESEND_CONNECT_TIMEOUT:5s}
+      read-timeout: ${RESEND_READ_TIMEOUT:15s}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: INFO
+    com.quoteflow: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level [%thread] %logger{36} correlationId=%X{correlationId} - %msg%n"

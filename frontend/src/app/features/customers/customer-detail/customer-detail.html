@@ -1,0 +1,114 @@
+<section class="customer-detail">
+  @if (loading()) {
+    <div class="state" role="status">
+      <mat-spinner diameter="36"></mat-spinner>
+      <span>Loading customer…</span>
+    </div>
+  } @else if (errorMessage(); as err) {
+    <div class="state state-error" role="alert">
+      <mat-icon aria-hidden="true">error_outline</mat-icon>
+      <p>{{ err }}</p>
+      <a mat-stroked-button routerLink="/app/customers">Back to customers</a>
+    </div>
+  } @else if (customer(); as c) {
+    <header class="page-header">
+      <div class="title-block">
+        <a class="back" routerLink="/app/customers">Customers</a>
+        <h1>{{ c.displayName }}</h1>
+        @if (c.companyName) {
+          <p class="subtitle">{{ c.companyName }}</p>
+        }
+        <p class="status">Status: {{ c.status }}</p>
+      </div>
+      <div class="header-actions">
+        <a mat-stroked-button [routerLink]="['/app/customers', c.id, 'edit']">Edit</a>
+        @if (c.status === 'ACTIVE') {
+          <button
+            mat-button
+            color="warn"
+            type="button"
+            class="archive-btn"
+            [disabled]="archiving()"
+            (click)="archive()"
+          >
+            Archive
+          </button>
+        }
+      </div>
+    </header>
+
+    <div class="detail-grid">
+      <section class="panel">
+        <h2>Contact</h2>
+        <dl>
+          <div>
+            <dt>Email</dt>
+            <dd class="wrap">{{ c.email || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Phone</dt>
+            <dd>{{ c.phone || '—' }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="panel">
+        <h2>Address</h2>
+        <dl>
+          <div>
+            <dt>Line 1</dt>
+            <dd class="wrap">{{ c.addressLine1 || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Line 2</dt>
+            <dd class="wrap">{{ c.addressLine2 || '—' }}</dd>
+          </div>
+          <div>
+            <dt>City</dt>
+            <dd>{{ c.city || '—' }}</dd>
+          </div>
+          <div>
+            <dt>State / region</dt>
+            <dd>{{ c.stateRegion || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Postal code</dt>
+            <dd>{{ c.postalCode || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Country</dt>
+            <dd>{{ c.countryCode || '—' }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="panel">
+        <h2>Tax & notes</h2>
+        <dl>
+          <div>
+            <dt>Tax ID</dt>
+            <dd class="wrap">{{ c.taxId || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Notes</dt>
+            <dd class="notes wrap">{{ c.notes || '—' }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="panel">
+        <h2>Record</h2>
+        <dl>
+          <div>
+            <dt>Created</dt>
+            <dd>{{ c.createdAt | date: 'medium' }}</dd>
+          </div>
+          <div>
+            <dt>Updated</dt>
+            <dd>{{ c.updatedAt | date: 'medium' }}</dd>
+          </div>
+        </dl>
+      </section>
+    </div>
+  }
+</section>

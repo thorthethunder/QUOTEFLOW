@@ -1,0 +1,60 @@
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+.env.prod-local
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Backend (Maven / Java)
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+backend/*.class
+backend/*.jar
+backend/*.war
+backend/*.ear
+backend/hs_err_pid*
+backend/.classpath
+backend/.project
+backend/.settings/
+
+# Frontend (Node / Angular)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/coverage/
+frontend/.sass-cache/
+frontend/*.tsbuildinfo
+
+# Test / coverage
+**/coverage/
+**/test-output/
+**/jacoco.exec
+
+# Docker
+*.pid
+
+# Misc
+*.tmp
+*.bak
+.cache/

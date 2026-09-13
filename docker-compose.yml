@@ -1,0 +1,26 @@
+# Local development only. Production PostgreSQL must not be publicly exposed;
+# use private networking and least-privileged application credentials.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: quoteflow-postgres
+    restart: unless-stopped
+    ports:
+      # Host binding is for local developer machines only.
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-quoteflow}
+      POSTGRES_USER: ${POSTGRES_USER:-quoteflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-quoteflow}
+    volumes:
+      - quoteflow_pgdata:/var/lib/postgresql/data
+      # Creates quoteflow_test on first volume init only (local integration tests).
+      - ./backend/src/main/resources/db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-quoteflow} -d ${POSTGRES_DB:-quoteflow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  quoteflow_pgdata:

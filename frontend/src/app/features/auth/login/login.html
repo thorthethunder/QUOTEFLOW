@@ -1,0 +1,82 @@
+<div class="auth-page">
+  <aside class="auth-brand" aria-hidden="false">
+    <p class="eyebrow">{{ appName }}</p>
+    <h1>Sign in to your workspace</h1>
+    <p class="lede">
+      Create quotations, convert to invoices, and track payments — securely, in one place.
+    </p>
+  </aside>
+
+  <main class="auth-panel">
+    <header class="auth-header">
+      <h2>Log in</h2>
+      <p>
+        New here?
+        <a routerLink="/register">Create an account</a>
+      </p>
+    </header>
+
+    @if (errorMessage(); as err) {
+      <div class="form-alert" role="alert">
+        <mat-icon aria-hidden="true">error_outline</mat-icon>
+        <span>{{ err }}</span>
+      </div>
+    }
+
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Email</mat-label>
+        <input
+          matInput
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          required
+        />
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <mat-error>Enter a valid email address.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Password</mat-label>
+        <input
+          matInput
+          [type]="hidePassword() ? 'password' : 'text'"
+          formControlName="password"
+          autocomplete="current-password"
+          required
+        />
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          (click)="togglePassword()"
+          [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'"
+          [attr.aria-pressed]="!hidePassword()"
+        >
+          <mat-icon>{{ hidePassword() ? 'visibility' : 'visibility_off' }}</mat-icon>
+        </button>
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+          <mat-error>Password must be 12–128 characters.</mat-error>
+        }
+      </mat-form-field>
+
+      <button
+        mat-flat-button
+        color="primary"
+        class="submit"
+        type="submit"
+        [disabled]="submitting()"
+      >
+        @if (submitting()) {
+          <mat-spinner diameter="20" aria-label="Signing in"></mat-spinner>
+        } @else {
+          Log in
+        }
+      </button>
+    </form>
+
+    <p class="back-link"><a routerLink="/">Back to home</a></p>
+  </main>
+</div>

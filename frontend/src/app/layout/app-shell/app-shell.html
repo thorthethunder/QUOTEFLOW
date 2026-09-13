@@ -1,0 +1,77 @@
+<div class="shell">
+  <mat-toolbar class="shell-toolbar">
+    @if (isHandset()) {
+      <button
+        mat-icon-button
+        type="button"
+        aria-label="Open navigation"
+        (click)="toggleNav()"
+      >
+        <mat-icon>menu</mat-icon>
+      </button>
+    }
+    <a class="brand" routerLink="/app">
+      <span class="brand-mark" aria-hidden="true">Q</span>
+      <span>{{ appName }}</span>
+    </a>
+    <span class="spacer"></span>
+    @if (user(); as u) {
+      <button
+        mat-button
+        type="button"
+        [matMenuTriggerFor]="userMenu"
+        class="user-trigger"
+        [attr.aria-label]="'Account menu for ' + u.email"
+      >
+        <span class="user-avatar" aria-hidden="true">
+          {{ (u.firstName || u.email).charAt(0).toUpperCase() }}
+        </span>
+        <span class="user-label">{{ u.firstName || u.email }}</span>
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <div class="menu-meta" role="presentation">
+          <div class="menu-name">{{ u.firstName }} {{ u.lastName }}</div>
+          <div class="menu-email">{{ u.email }}</div>
+          <div class="menu-role">{{ u.tenantRole }}</div>
+        </div>
+        <button mat-menu-item type="button" (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Log out</span>
+        </button>
+      </mat-menu>
+    }
+  </mat-toolbar>
+
+  <mat-sidenav-container class="shell-container">
+    <mat-sidenav
+      class="shell-sidenav"
+      [mode]="isHandset() ? 'over' : 'side'"
+      [opened]="sidenavOpened()"
+      (closedStart)="sidenavOpened.set(false)"
+      [attr.aria-label]="'Main navigation'"
+    >
+      <p class="nav-caption">Workspace</p>
+      <mat-nav-list>
+        @for (item of navItems; track item.path) {
+          <a
+            mat-list-item
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: item.exact }"
+            [class.nav-plan]="item.path === '/app/plan'"
+            (click)="onNavClick()"
+          >
+            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+            <span matListItemTitle>{{ item.label }}</span>
+          </a>
+        }
+      </mat-nav-list>
+    </mat-sidenav>
+
+    <mat-sidenav-content class="shell-content">
+      <div class="page-frame">
+        <router-outlet />
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>

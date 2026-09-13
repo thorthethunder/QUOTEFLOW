@@ -1,0 +1,128 @@
+<section class="quotation-list">
+  <header class="page-header">
+    <div>
+      <h1>Quotations</h1>
+      <p class="subtitle">Create and manage draft and sent quotations.</p>
+    </div>
+    @if (canCreate()) {
+      <a mat-flat-button color="primary" routerLink="/app/quotations/new" class="add-btn">
+        <mat-icon>request_quote</mat-icon>
+        New quotation
+      </a>
+    } @else {
+      <a mat-stroked-button routerLink="/app/plan" class="add-btn">
+        <mat-icon>workspace_premium</mat-icon>
+        Quotation limit reached — view plans
+      </a>
+    }
+  </header>
+
+  <div class="toolbar">
+    <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+      <mat-label>Search</mat-label>
+      <input
+        matInput
+        type="search"
+        [formControl]="searchControl"
+        aria-label="Search quotations by number or customer"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="status-field" subscriptSizing="dynamic">
+      <mat-label>Status</mat-label>
+      <mat-select [formControl]="statusControl" aria-label="Filter by status">
+        <mat-option value="">All</mat-option>
+        <mat-option value="DRAFT">Draft</mat-option>
+        <mat-option value="SENT">Sent</mat-option>
+        <mat-option value="CANCELLED">Cancelled</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (loading()) {
+    <div class="state" role="status"><mat-spinner diameter="36"></mat-spinner><span>Loading…</span></div>
+  } @else if (errorMessage(); as err) {
+    <div class="state state-error" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ err }}</p>
+      <button mat-stroked-button type="button" (click)="retry()">Retry</button>
+    </div>
+  } @else if (page(); as p) {
+    @if (p.totalElements === 0) {
+      <div class="state state-empty">
+        <mat-icon class="empty-icon" aria-hidden="true">request_quote</mat-icon>
+        <h2>No quotations yet</h2>
+        <p>Create a draft quotation for an active customer.</p>
+        <a mat-flat-button color="primary" routerLink="/app/quotations/new">New quotation</a>
+      </div>
+    } @else {
+      <div class="table-wrap desktop-only" role="region" aria-label="Quotation table">
+        <table mat-table [dataSource]="p.content" class="data-table">
+          <ng-container matColumnDef="quotationNumber">
+            <th mat-header-cell *matHeaderCellDef>Number</th>
+            <td mat-cell *matCellDef="let row">
+              <a [routerLink]="['/app/quotations', row.id]" class="name-link">{{ row.quotationNumber }}</a>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="customer">
+            <th mat-header-cell *matHeaderCellDef>Customer</th>
+            <td mat-cell *matCellDef="let row" class="wrap">{{ row.customerDisplayName }}</td>
+          </ng-container>
+          <ng-container matColumnDef="issueDate">
+            <th mat-header-cell *matHeaderCellDef>Issue date</th>
+            <td mat-cell *matCellDef="let row">{{ row.issueDate | date: 'mediumDate' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="qf-chip" [class]="'qf-chip--' + row.status.toLowerCase()">{{ row.status }}</span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef>Total</th>
+            <td mat-cell *matCellDef="let row">{{ row.totalAmount | currency: row.currency }}</td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let row">
+              <a mat-button [routerLink]="['/app/quotations', row.id]" [attr.aria-label]="'View ' + row.quotationNumber">View</a>
+              @if (row.status === 'DRAFT') {
+                <a mat-button [routerLink]="['/app/quotations', row.id, 'edit']" [attr.aria-label]="'Edit ' + row.quotationNumber">Edit</a>
+              }
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+
+      <ul class="card-list mobile-only" aria-label="Quotation list">
+        @for (row of p.content; track trackById($index, row)) {
+          <li class="card">
+            <a [routerLink]="['/app/quotations', row.id]" class="name-link">{{ row.quotationNumber }}</a>
+            <div class="muted wrap">{{ row.customerDisplayName }}</div>
+            <div class="muted">{{ row.issueDate | date: 'mediumDate' }} ·
+              <span class="qf-chip" [class]="'qf-chip--' + row.status.toLowerCase()">{{ row.status }}</span>
+            </div>
+            <div class="total">{{ row.totalAmount | currency: row.currency }}</div>
+            <div class="card-actions">
+              <a mat-stroked-button [routerLink]="['/app/quotations', row.id]">View</a>
+              @if (row.status === 'DRAFT') {
+                <a mat-button [routerLink]="['/app/quotations', row.id, 'edit']">Edit</a>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+
+      <mat-paginator
+        [length]="p.totalElements"
+        [pageIndex]="pageIndex()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50, 100]"
+        (page)="onPage($event)"
+        aria-label="Quotation pagination"
+      />
+    }
+  }
+</section>

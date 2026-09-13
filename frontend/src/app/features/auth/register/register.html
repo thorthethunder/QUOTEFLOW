@@ -1,0 +1,123 @@
+<div class="auth-page">
+  <aside class="auth-brand">
+    <p class="eyebrow">{{ appName }}</p>
+    <h1>Start quoting with a free workspace</h1>
+    <p class="lede">
+      Create your account as the business owner. Quotations, invoices, and payments —
+      ready when you are.
+    </p>
+  </aside>
+
+  <main class="auth-panel">
+    <header class="auth-header">
+      <h2>Create account</h2>
+      <p>
+        Already registered?
+        <a routerLink="/login">Log in</a>
+      </p>
+    </header>
+
+    @if (errorMessage(); as err) {
+      <div class="form-alert" role="alert">
+        <mat-icon aria-hidden="true">error_outline</mat-icon>
+        <span>{{ err }}</span>
+      </div>
+    }
+
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Business name</mat-label>
+        <input matInput formControlName="businessName" autocomplete="organization" required />
+        @if (form.controls.businessName.touched && form.controls.businessName.invalid) {
+          <mat-error>Business name is required.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="form-grid two">
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>First name</mat-label>
+          <input matInput formControlName="firstName" autocomplete="given-name" required />
+          @if (form.controls.firstName.touched && form.controls.firstName.invalid) {
+            <mat-error>Required</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Last name</mat-label>
+          <input matInput formControlName="lastName" autocomplete="family-name" required />
+          @if (form.controls.lastName.touched && form.controls.lastName.invalid) {
+            <mat-error>Required</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" autocomplete="email" required />
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <mat-error>Enter a valid email address.</mat-error>
+        }
+      </mat-form-field>
+
+      <p class="form-hint">Password must be 12–128 characters. Longer passphrases are welcome.</p>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Password</mat-label>
+        <input
+          matInput
+          [type]="hidePassword() ? 'password' : 'text'"
+          formControlName="password"
+          autocomplete="new-password"
+          required
+        />
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          (click)="togglePassword()"
+          [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'"
+          [attr.aria-pressed]="!hidePassword()"
+        >
+          <mat-icon>{{ hidePassword() ? 'visibility' : 'visibility_off' }}</mat-icon>
+        </button>
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+          <mat-error>Use 12–128 characters.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="form-grid two">
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Currency</mat-label>
+          <mat-select formControlName="currency" required>
+            @for (c of currencies; track c.code) {
+              <mat-option [value]="c.code">{{ c.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Timezone</mat-label>
+          <mat-select formControlName="timezone" required>
+            @for (tz of timezones; track tz) {
+              <mat-option [value]="tz">{{ tz }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <button
+        mat-flat-button
+        color="primary"
+        class="submit"
+        type="submit"
+        [disabled]="submitting()"
+      >
+        @if (submitting()) {
+          <mat-spinner diameter="20" aria-label="Creating account"></mat-spinner>
+        } @else {
+          Create account
+        }
+      </button>
+    </form>
+
+    <p class="back-link"><a routerLink="/">Back to home</a></p>
+  </main>
+</div>

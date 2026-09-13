@@ -1,0 +1,168 @@
+<header class="landing-top">
+  <mat-toolbar class="topbar">
+    <a class="brand" routerLink="/">
+      <span class="brand-mark" aria-hidden="true">Q</span>
+      <span>{{ title }}</span>
+    </a>
+    <span class="spacer"></span>
+    <a mat-button class="nav-link" href="#pricing">See plans</a>
+    <a mat-button class="nav-link" routerLink="/login">Log in</a>
+    <a mat-flat-button color="primary" class="nav-cta" routerLink="/register">Create free account</a>
+  </mat-toolbar>
+</header>
+
+<main>
+  <section class="hero-band">
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">For freelancers &amp; small service businesses</p>
+        <h1>Create professional quotations, convert them into invoices, and track payments from one place.</h1>
+        <p class="lede">
+          QuoteFlow keeps customers, quotes, invoices, payments, and receipts together —
+          with automatic totals and PDFs you can send with confidence.
+        </p>
+        <div class="actions">
+          <a mat-flat-button color="primary" class="cta-primary" routerLink="/register">Create free account</a>
+          <a mat-stroked-button class="cta-secondary" href="#pricing">See plans</a>
+          <a mat-button routerLink="/login">Log in</a>
+        </div>
+      </div>
+
+      <div class="hero-preview" aria-hidden="true">
+        <div class="preview-glow"></div>
+        <article class="preview-card preview-quote">
+          <span class="qf-chip qf-chip--sent">Quotation</span>
+          <p class="preview-id">Q-000124</p>
+          <p class="preview-amount">₹24,500</p>
+          <p class="preview-meta">Demo illustration</p>
+        </article>
+        <div class="preview-arrow" aria-hidden="true">↓</div>
+        <article class="preview-card preview-invoice">
+          <span class="qf-chip qf-chip--sent">Invoice</span>
+          <p class="preview-id">INV-000089</p>
+          <p class="preview-amount">₹24,500</p>
+        </article>
+        <div class="preview-arrow" aria-hidden="true">↓</div>
+        <article class="preview-card preview-paid">
+          <span class="qf-chip qf-chip--paid">Payment received</span>
+          <p class="preview-id">Balance settled</p>
+          <p class="preview-amount">₹24,500</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-indigo" aria-labelledby="workflow-heading">
+    <div class="band-inner">
+      <h2 id="workflow-heading">From first customer to paid receipt</h2>
+      <p class="section-lede">
+        One clear path: capture the work, document the price, invoice for it, and record what comes in.
+      </p>
+      <ol class="workflow">
+        @for (step of workflow; track step.label; let last = $last) {
+          <li>
+            <span class="qf-icon-surface qf-icon-surface--primary" aria-hidden="true">
+              <mat-icon>{{ step.icon }}</mat-icon>
+            </span>
+            <span class="workflow-label">{{ step.label }}</span>
+          </li>
+          @if (!last) {
+            <li class="workflow-sep" aria-hidden="true">
+              <mat-icon>chevron_right</mat-icon>
+            </li>
+          }
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="benefits-heading">
+    <div class="band-inner">
+      <h2 id="benefits-heading">Built for how small businesses actually work</h2>
+      <p class="section-lede">Clear tools for quoting and getting paid — without clutter.</p>
+      <div class="benefit-grid">
+        @for (b of benefits; track b.title) {
+          <article class="benefit-card">
+            <span class="qf-icon-surface qf-icon-surface--{{ b.tone }}" aria-hidden="true">
+              <mat-icon>{{ b.icon }}</mat-icon>
+            </span>
+            <h3>{{ b.title }}</h3>
+            <p>{{ b.body }}</p>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-cyan" id="pricing" aria-labelledby="pricing-heading">
+    <div class="band-inner">
+      <h2 id="pricing-heading">Simple plans</h2>
+      <p class="section-lede">
+        Start on Free. Pro and Business pricing is published for transparency —
+        online checkout arrives in a later release.
+      </p>
+      <div class="pricing-grid">
+        @for (plan of plans; track plan.id) {
+          <article class="pricing-card" [class.pricing-card--featured]="plan.highlight">
+            @if (plan.badge) {
+              <p class="plan-badge">{{ plan.badge }}</p>
+            }
+            <h3>{{ plan.name }}</h3>
+            <p class="price">
+              <span class="price-num">{{ plan.price }}</span>
+              @if (plan.period) {
+                <span class="price-period">{{ plan.period }}</span>
+              }
+            </p>
+            @if (plan.alt) {
+              <p class="price-alt">or {{ plan.alt }}</p>
+            }
+            <ul>
+              @for (f of plan.features; track f) {
+                <li>{{ f }}</li>
+              }
+            </ul>
+            @if (plan.highlight) {
+              <a mat-flat-button color="primary" routerLink="/register">{{ plan.cta }}</a>
+            } @else {
+              <a mat-stroked-button routerLink="/register">{{ plan.cta }}</a>
+            }
+          </article>
+        }
+      </div>
+      <p class="pricing-footnote">
+        Upgrade payments are not enabled yet. Register free today; paid checkout comes next.
+      </p>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="trust-heading">
+    <div class="band-inner trust">
+      <h2 id="trust-heading">Designed for trust</h2>
+      <ul class="trust-list">
+        @for (item of trust; track item) {
+          <li>
+            <mat-icon aria-hidden="true">check_circle</mat-icon>
+            <span>{{ item }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="band band-cta" aria-labelledby="final-cta-heading">
+    <div class="band-inner cta-block">
+      <h2 id="final-cta-heading">Start quoting in minutes</h2>
+      <p>Create your free workspace — no payment required to begin.</p>
+      <a mat-flat-button color="primary" class="cta-primary" routerLink="/register">Create free account</a>
+    </div>
+  </section>
+</main>
+
+<footer class="landing-footer">
+  <div class="band-inner footer-inner">
+    <span class="brand-word">{{ title }}</span>
+    <span class="muted">Quotations · Invoices · Payments</span>
+    <a routerLink="/login">Log in</a>
+  </div>
+</footer>

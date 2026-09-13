@@ -1,0 +1,4 @@
+{
+  "apiBaseUrl": "https://REPLACE-WITH-STAGING-API-HOST/api/v1",
+  "_comment": "Only use absolute API URL when frontend and API share a same-site custom domain strategy OR when intentionally using credentialed CORS with SameSite=None (not recommended). Prefer same-origin /api proxy via Cloudflare _redirects — see docs/DEPLOYMENT.md."
+}

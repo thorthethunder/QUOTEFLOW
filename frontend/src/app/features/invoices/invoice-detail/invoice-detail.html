@@ -1,0 +1,262 @@
+<section class="invoice-detail">
+  @if (loading()) {
+    <div class="state" role="status"><mat-spinner diameter="36"></mat-spinner><span>Loading…</span></div>
+  } @else if (errorMessage(); as err) {
+    <div class="state state-error" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ err }}</p>
+      <a mat-stroked-button routerLink="/app/invoices">Back</a>
+    </div>
+  } @else if (invoice(); as inv) {
+    <header class="page-header">
+      <div>
+        <a class="back" routerLink="/app/invoices">Invoices</a>
+        <h1>{{ inv.invoiceNumber }}</h1>
+        <p class="subtitle">{{ inv.customerDisplayName }}</p>
+        <p class="status">
+          <span class="qf-chip" [class]="'qf-chip--' + inv.status.toLowerCase()">{{ inv.status }}</span>
+        </p>
+        @if (paymentSummary(); as summary) {
+          <p class="payment-state">
+            <span class="qf-chip" [class]="'qf-chip--' + summary.paymentState.toLowerCase()">
+              {{ paymentStateLabel(summary.paymentState) }}
+            </span>
+          </p>
+        }
+        @if (inv.sourceQuotationId && inv.sourceQuotationNumber) {
+          <p class="source">
+            Created from quotation
+            <a [routerLink]="['/app/quotations', inv.sourceQuotationId]">{{ inv.sourceQuotationNumber }}</a>
+          </p>
+        }
+      </div>
+      <div class="header-actions">
+        @if (inv.status === 'DRAFT') {
+          <a mat-stroked-button [routerLink]="['/app/invoices', inv.id, 'edit']">Edit</a>
+          <button mat-flat-button color="primary" type="button" [disabled]="acting()" (click)="markSent()">
+            Mark as Sent
+          </button>
+        }
+        @if (canRecordPayment()) {
+          <button mat-flat-button color="primary" type="button" (click)="openRecordPayment()">
+            Record payment
+          </button>
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="reminderBusy()"
+            (click)="openSendReminder()"
+            aria-label="Send payment reminder"
+          >
+            {{ reminderBusy() ? 'Sending…' : 'Send reminder' }}
+          </button>
+        }
+        @if (inv.status === 'DRAFT' || inv.status === 'SENT') {
+          <button mat-button color="warn" type="button" [disabled]="acting()" (click)="cancel()">Cancel invoice</button>
+        }
+      </div>
+    </header>
+
+    @if (paymentError(); as payErr) {
+      <p class="payment-error" role="alert">{{ payErr }}</p>
+    }
+    @if (reminderMessage(); as remMsg) {
+      <p class="email-status" role="status">{{ remMsg }}</p>
+    }
+    @if (notifications().length > 0) {
+      <section class="panel" aria-label="Reminder history">
+        <h2>Email history</h2>
+        <ul class="email-history">
+          @for (n of notifications(); track n.id) {
+            <li>
+              <span class="qf-chip" [class]="'qf-chip--' + n.status.toLowerCase()">{{ n.status }}</span>
+              <span>{{ n.subject }}</span>
+              <span class="muted">to {{ n.recipientMasked }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <div class="panels">
+      <section class="panel">
+        <h2>From (business snapshot)</h2>
+        <p class="wrap">{{ inv.businessName }}</p>
+        <p class="muted wrap">{{ inv.businessEmail || '—' }} · {{ inv.businessPhone || '—' }}</p>
+      </section>
+      <section class="panel">
+        <h2>Customer snapshot</h2>
+        <p class="wrap">{{ inv.customerDisplayName }}</p>
+        @if (inv.customerCompanyName) { <p class="muted wrap">{{ inv.customerCompanyName }}</p> }
+        <p class="muted wrap">{{ inv.customerEmail || '—' }} · {{ inv.customerPhone || '—' }}</p>
+      </section>
+      <section class="panel">
+        <h2>Dates & currency</h2>
+        <p>Issue: {{ inv.issueDate | date: 'mediumDate' }}</p>
+        <p>Due date: {{ inv.dueDate ? (inv.dueDate | date: 'mediumDate') : '—' }}</p>
+        <p>Currency: {{ inv.currency }}</p>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>Line items</h2>
+      <ul class="lines">
+        @for (item of inv.items; track item.id) {
+          <li>
+            <div class="wrap"><strong>{{ item.description }}</strong></div>
+            <div class="muted">{{ item.quantity }} × {{ item.unitPrice | currency: inv.currency }}</div>
+            <div>{{ item.lineSubtotal | currency: inv.currency }}</div>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="panel totals">
+      <h2>Totals</h2>
+      <dl>
+        <div><dt>Subtotal</dt><dd>{{ inv.subtotal | currency: inv.currency }}</dd></div>
+        <div><dt>Discount</dt><dd>{{ inv.discountAmount | currency: inv.currency }}</dd></div>
+        <div><dt>Tax ({{ inv.taxRate }}%)</dt><dd>{{ inv.taxAmount | currency: inv.currency }}</dd></div>
+        <div class="grand"><dt>Total</dt><dd>{{ inv.totalAmount | currency: inv.currency }}</dd></div>
+      </dl>
+    </section>
+
+    @if (paymentSummary(); as summary) {
+      <section class="panel payment-summary">
+        <div class="payment-summary-header">
+          <h2>Payment summary</h2>
+          @if (canRecordPayment()) {
+            <button mat-stroked-button type="button" (click)="openRecordPayment()">Record payment</button>
+          }
+        </div>
+        <dl>
+          <div><dt>Invoice total</dt><dd>{{ inv.totalAmount | currency: inv.currency }}</dd></div>
+          <div><dt>Amount paid</dt><dd>{{ summary.amountPaid | currency: inv.currency }}</dd></div>
+          <div><dt>Balance due</dt><dd>{{ summary.balanceDue | currency: inv.currency }}</dd></div>
+          <div class="state-row">
+            <dt>Payment state</dt>
+            <dd>
+              <span class="qf-chip" [class]="'qf-chip--' + summary.paymentState.toLowerCase()">
+                {{ paymentStateLabel(summary.paymentState) }}
+              </span>
+            </dd>
+          </div>
+        </dl>
+        <div
+          class="pay-meter"
+          role="meter"
+          [attr.aria-valuenow]="paymentProgress(summary.amountPaid, inv.totalAmount)"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          [attr.aria-label]="
+            'Paid ' + summary.amountPaid + ' of ' + inv.totalAmount + ' ' + inv.currency
+          "
+        >
+          <div
+            class="pay-meter-fill"
+            [style.width.%]="paymentProgress(summary.amountPaid, inv.totalAmount)"
+          ></div>
+        </div>
+        <p class="pay-meter-caption">
+          {{ summary.amountPaid | currency: inv.currency }} paid of
+          {{ inv.totalAmount | currency: inv.currency }}
+        </p>
+      </section>
+
+      <section class="panel payment-history">
+        <h2>Payment history</h2>
+        @if (payments().length === 0) {
+          <p class="muted">No payments recorded yet.</p>
+        } @else {
+          <div class="table-wrap desktop-only" role="region" aria-label="Payment history">
+            <table mat-table [dataSource]="payments()" class="data-table">
+              <ng-container matColumnDef="receipt">
+                <th mat-header-cell *matHeaderCellDef>Receipt</th>
+                <td mat-cell *matCellDef="let row">{{ row.receiptNumber }}</td>
+              </ng-container>
+              <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef>Date</th>
+                <td mat-cell *matCellDef="let row">{{ row.paymentDate | date: 'mediumDate' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="method">
+                <th mat-header-cell *matHeaderCellDef>Method</th>
+                <td mat-cell *matCellDef="let row">{{ paymentMethodLabel(row.paymentMethod) }}</td>
+              </ng-container>
+              <ng-container matColumnDef="amount">
+                <th mat-header-cell *matHeaderCellDef>Amount</th>
+                <td mat-cell *matCellDef="let row">{{ row.amount | currency: row.currency }}</td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let row">
+                  <span [class.voided]="row.status === 'VOIDED'">{{ paymentStatusLabel(row.status) }}</span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let row">
+                  <button
+                    mat-button
+                    type="button"
+                    [disabled]="downloadingReceiptId() === row.id"
+                    (click)="downloadReceipt(row)"
+                  >
+                    {{ downloadingReceiptId() === row.id ? 'Downloading…' : 'Download receipt' }}
+                  </button>
+                  @if (row.status === 'RECORDED') {
+                    <button mat-button color="warn" type="button" class="void-action" (click)="openVoidPayment(row)">
+                      Void
+                    </button>
+                  }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="paymentColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: paymentColumns" [class.row-voided]="row.status === 'VOIDED'"></tr>
+            </table>
+          </div>
+
+          <ul class="card-list mobile-only" aria-label="Payment history">
+            @for (row of payments(); track row.id) {
+              <li class="payment-card" [class.row-voided]="row.status === 'VOIDED'">
+                <div class="payment-card-top">
+                  <strong>{{ row.receiptNumber }}</strong>
+                  <span [class.voided]="row.status === 'VOIDED'">{{ paymentStatusLabel(row.status) }}</span>
+                </div>
+                <div class="muted">
+                  {{ row.paymentDate | date: 'mediumDate' }} · {{ paymentMethodLabel(row.paymentMethod) }}
+                </div>
+                <div class="amount">{{ row.amount | currency: row.currency }}</div>
+                @if (row.reference) {
+                  <div class="muted wrap">Ref: {{ row.reference }}</div>
+                }
+                <div class="card-actions">
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    [disabled]="downloadingReceiptId() === row.id"
+                    (click)="downloadReceipt(row)"
+                  >
+                    {{ downloadingReceiptId() === row.id ? 'Downloading…' : 'Download receipt' }}
+                  </button>
+                  @if (row.status === 'RECORDED') {
+                    <button mat-button color="warn" type="button" class="void-action" (click)="openVoidPayment(row)">
+                      Void
+                    </button>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    }
+
+    @if (inv.notes || inv.terms) {
+      <section class="panel">
+        <h2>Notes & terms</h2>
+        @if (inv.notes) { <p class="wrap pre">{{ inv.notes }}</p> }
+        @if (inv.terms) { <p class="wrap pre">{{ inv.terms }}</p> }
+      </section>
+    }
+  }
+</section>

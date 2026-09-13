@@ -1,0 +1,56 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/quoteflow_test}
+    username: ${DATABASE_USERNAME:quoteflow}
+    password: ${DATABASE_PASSWORD:quoteflow}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+quoteflow:
+  security:
+    jwt:
+      secret: test-only-quoteflow-jwt-signing-secret-min-32-chars!!
+      issuer: quoteflow-test
+      audience: quoteflow-api-test
+      access-token-ttl: 15m
+      refresh-token-ttl: 14d
+    cors:
+      allowed-origins: http://localhost:4200,http://127.0.0.1:4200
+    bcrypt-strength: 4
+    auth-rate-limit:
+      enabled: false
+    refresh-cookie:
+      secure: false
+      same-site: Lax
+      return-in-body: true
+  billing:
+    enabled: false
+    provider: FAKE
+    razorpay:
+      key-id: rzp_test_fake
+      key-secret: fake_key_secret
+      webhook-secret: fake_webhook_secret
+      pro-monthly-plan-id: plan_fake_pro_monthly
+      pro-annual-plan-id: plan_fake_pro_annual
+      business-monthly-plan-id: plan_fake_business_monthly
+  email:
+    provider: FAKE
+    from-email: noreply@test.quoteflow.local
+    from-name: QuoteFlow Test
+    worker-enabled: false
+    claim-lease: 10m
+    max-attempts: 4
+    per-tenant-per-minute: 1000
+    per-document-per-minute: 1000
+
+logging:
+  level:
+    root: WARN
+    com.quoteflow: INFO
+    org.flywaydb: INFO

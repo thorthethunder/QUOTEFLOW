@@ -1,0 +1,28 @@
+# Additive staging profile. Activate with production security:
+#   SPRING_PROFILES_ACTIVE=prod,staging
+#
+# Staging keeps prod fail-closed JWT/CORS/cookies/headers. Do not use staging alone.
+
+spring:
+  config:
+    activate:
+      on-profile: staging
+  datasource:
+    hikari:
+      # Conservative default for small managed Postgres plans.
+      maximum-pool-size: ${HIKARI_MAXIMUM_POOL_SIZE:5}
+      minimum-idle: ${HIKARI_MINIMUM_IDLE:1}
+
+quoteflow:
+  billing:
+    # Default: no live/test checkout in hosted staging until FINAL PAYMENT VALIDATION.
+    enabled: ${BILLING_ENABLED:false}
+  email:
+    # Honest unavailable state — never CONSOLE "accepted" in hosted staging.
+    provider: ${EMAIL_PROVIDER:DISABLED}
+    worker-enabled: ${EMAIL_WORKER_ENABLED:false}
+
+logging:
+  level:
+    root: INFO
+    com.quoteflow: INFO

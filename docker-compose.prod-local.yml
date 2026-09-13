@@ -1,0 +1,75 @@
+# Production-like local stack (NOT cloud deployment).
+# Usage:
+#   cp .env.example .env.prod-local   # then edit placeholders
+#   docker compose -f docker-compose.prod-local.yml --env-file .env.prod-local up --build
+#
+# Developer workflow (ng serve + spring-boot:run + docker-compose.yml postgres) remains unchanged.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-quoteflow}
+      POSTGRES_USER: ${POSTGRES_USER:-quoteflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-quoteflow_prod_local_change_me}
+    volumes:
+      - quoteflow_prod_local_pgdata:/var/lib/postgresql/data
+      - ./backend/src/main/resources/db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-quoteflow} -d ${POSTGRES_DB:-quoteflow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Bound to localhost only for local smoke — not a production exposure model.
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      PORT: "8080"
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-quoteflow}
+      DATABASE_USERNAME: ${POSTGRES_USER:-quoteflow}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-quoteflow_prod_local_change_me}
+      JWT_SECRET: ${JWT_SECRET:-prod-local-only-replace-with-32plus-byte-secret!!}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:8088}
+      BILLING_ENABLED: ${BILLING_ENABLED:-false}
+      BILLING_PROVIDER: ${BILLING_PROVIDER:-RAZORPAY}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-CONSOLE}
+      EMAIL_ALLOW_DEV_PROVIDER: ${EMAIL_ALLOW_DEV_PROVIDER:-true}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@quoteflow.local}
+      EMAIL_WORKER_ENABLED: ${EMAIL_WORKER_ENABLED:-true}
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=75.0}
+      TZ: UTC
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/actuator/health/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8089}:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        API_BASE_URL: /api/v1
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8088}:8080"
+
+volumes:
+  quoteflow_prod_local_pgdata:

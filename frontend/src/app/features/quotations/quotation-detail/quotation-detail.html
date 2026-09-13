@@ -1,0 +1,167 @@
+<section class="quotation-detail">
+  @if (loading()) {
+    <div class="state" role="status"><mat-spinner diameter="36"></mat-spinner><span>Loading…</span></div>
+  } @else if (errorMessage(); as err) {
+    <div class="state state-error" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ err }}</p>
+      <a mat-stroked-button routerLink="/app/quotations">Back</a>
+    </div>
+  } @else if (quotation(); as q) {
+    <header class="page-header">
+      <div>
+        <a class="back" routerLink="/app/quotations">Quotations</a>
+        <h1>{{ q.quotationNumber }}</h1>
+        <p class="subtitle">{{ q.customerDisplayName }}</p>
+        <p class="status">
+          <span class="qf-chip" [class]="'qf-chip--' + q.status.toLowerCase()">{{ q.status }}</span>
+        </p>
+      </div>
+      <div class="header-actions">
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="downloadingPdf()"
+          (click)="downloadPdf()"
+          aria-label="Download quotation PDF"
+        >
+          @if (downloadingPdf()) {
+            <ng-container>
+              <mat-spinner diameter="18"></mat-spinner>
+              <span>Preparing PDF…</span>
+            </ng-container>
+          } @else {
+            <ng-container>
+              <mat-icon>picture_as_pdf</mat-icon>
+              <span>Download PDF</span>
+            </ng-container>
+          }
+        </button>
+        @if (q.status === 'DRAFT') {
+          <a mat-stroked-button [routerLink]="['/app/quotations', q.id, 'edit']">Edit</a>
+          <button mat-flat-button color="primary" type="button" [disabled]="acting()" (click)="markSent()">
+            Mark as sent
+          </button>
+        }
+        @if (q.status === 'SENT' && q.convertedInvoiceId) {
+          <a mat-stroked-button [routerLink]="['/app/invoices', q.convertedInvoiceId]">
+            View Invoice{{ q.convertedInvoiceNumber ? ' ' + q.convertedInvoiceNumber : '' }}
+          </a>
+        } @else if (q.status === 'SENT' && !q.convertedInvoiceId) {
+          @if (invoiceLimitReached()) {
+            <div class="convert-limit" role="status">
+              <p>Invoice monthly limit reached. Conversion is unavailable until next month or an upgrade.</p>
+              <a mat-stroked-button routerLink="/app/plan">View plans</a>
+            </div>
+          } @else {
+            <button mat-flat-button color="primary" type="button" [disabled]="acting()" (click)="convertToInvoice()">
+              Convert to Invoice
+            </button>
+          }
+        }
+        @if (q.status === 'DRAFT' || q.status === 'SENT') {
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="emailBusy()"
+            (click)="openSendEmail()"
+            aria-label="Send quotation email"
+          >
+            @if (emailBusy()) {
+              <span>Sending…</span>
+            } @else {
+              <span>Send email</span>
+            }
+          </button>
+        }
+        @if (q.status === 'DRAFT' || q.status === 'SENT') {
+          <button mat-button color="warn" type="button" [disabled]="acting()" (click)="cancel()">Cancel quotation</button>
+        }
+      </div>
+    </header>
+    @if (actionError(); as actErr) {
+      <div class="form-alert" role="alert">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ actErr }}</span>
+        @if (showViewPlans()) {
+          <a mat-stroked-button routerLink="/app/plan">View plans</a>
+        }
+      </div>
+    }
+    @if (emailMessage(); as emailMsg) {
+      <p class="email-status" role="status">{{ emailMsg }}</p>
+    }
+    @if (pdfError(); as pdfErr) {
+      <p class="pdf-error" role="alert">{{ pdfErr }}</p>
+    }
+
+    @if (notifications().length > 0) {
+      <section class="panel" aria-label="Email history">
+        <h2>Email history</h2>
+        <ul class="email-history">
+          @for (n of notifications(); track n.id) {
+            <li>
+              <span class="qf-chip" [class]="'qf-chip--' + n.status.toLowerCase()">{{ n.status }}</span>
+              <span>{{ n.subject }}</span>
+              <span class="muted">to {{ n.recipientMasked }}</span>
+              @if (n.sentAt) {
+                <time [attr.datetime]="n.sentAt">{{ n.sentAt | date: 'short' }}</time>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <div class="panels">
+      <section class="panel">
+        <h2>From (business snapshot)</h2>
+        <p class="wrap">{{ q.businessName }}</p>
+        <p class="muted wrap">{{ q.businessEmail || '—' }} · {{ q.businessPhone || '—' }}</p>
+      </section>
+      <section class="panel">
+        <h2>Customer snapshot</h2>
+        <p class="wrap">{{ q.customerDisplayName }}</p>
+        @if (q.customerCompanyName) { <p class="muted wrap">{{ q.customerCompanyName }}</p> }
+        <p class="muted wrap">{{ q.customerEmail || '—' }} · {{ q.customerPhone || '—' }}</p>
+      </section>
+      <section class="panel">
+        <h2>Dates & currency</h2>
+        <p>Issue: {{ q.issueDate | date: 'mediumDate' }}</p>
+        <p>Valid until: {{ q.validUntil ? (q.validUntil | date: 'mediumDate') : '—' }}</p>
+        <p>Currency: {{ q.currency }}</p>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>Line items</h2>
+      <ul class="lines">
+        @for (item of q.items; track item.id) {
+          <li>
+            <div class="wrap"><strong>{{ item.description }}</strong></div>
+            <div class="muted">{{ item.quantity }} × {{ item.unitPrice | currency: q.currency }}</div>
+            <div>{{ item.lineSubtotal | currency: q.currency }}</div>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="panel totals">
+      <h2>Totals</h2>
+      <dl>
+        <div><dt>Subtotal</dt><dd>{{ q.subtotal | currency: q.currency }}</dd></div>
+        <div><dt>Discount</dt><dd>{{ q.discountAmount | currency: q.currency }}</dd></div>
+        <div><dt>Tax ({{ q.taxRate }}%)</dt><dd>{{ q.taxAmount | currency: q.currency }}</dd></div>
+        <div class="grand"><dt>Total</dt><dd>{{ q.totalAmount | currency: q.currency }}</dd></div>
+      </dl>
+    </section>
+
+    @if (q.notes || q.terms) {
+      <section class="panel">
+        <h2>Notes & terms</h2>
+        @if (q.notes) { <p class="wrap pre">{{ q.notes }}</p> }
+        @if (q.terms) { <p class="wrap pre">{{ q.terms }}</p> }
+      </section>
+    }
+  }
+</section>

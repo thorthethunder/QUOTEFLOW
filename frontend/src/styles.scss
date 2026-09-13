@@ -1,0 +1,409 @@
+@use '@angular/material' as mat;
+
+/* =============================================================================
+   QuoteFlow brand system — Phase 11.5
+   Controlled color + hierarchy. Light theme quality first.
+   ============================================================================= */
+
+:root {
+  /* Spacing scale */
+  --qf-space-1: 0.25rem;
+  --qf-space-2: 0.5rem;
+  --qf-space-3: 0.75rem;
+  --qf-space-4: 1rem;
+  --qf-space-5: 1.5rem;
+  --qf-space-6: 2rem;
+  --qf-space-7: 2.5rem;
+  --qf-space-8: 3rem;
+  --qf-space-9: 4rem;
+  --qf-space-10: 5rem;
+
+  /* Radii */
+  --qf-radius-sm: 0.375rem;
+  --qf-radius-md: 0.625rem;
+  --qf-radius-lg: 0.875rem;
+  --qf-radius-xl: 1.25rem;
+  --qf-radius-pill: 999px;
+
+  /* Layout */
+  --qf-content-max: 72rem;
+  --qf-marketing-max: 70rem;
+  --qf-form-max: 28rem;
+  --qf-bp-mobile: 600px;
+  --qf-bp-tablet: 960px;
+  --qf-bp-desktop: 1280px;
+
+  /* Brand palette (semantic; Material theme synced via mat.theme) */
+  --qf-primary: #4f46e5;
+  --qf-primary-dark: #3730a3;
+  --qf-primary-soft: #eef2ff;
+  --qf-secondary: #0891b2;
+  --qf-secondary-soft: #ecfeff;
+  --qf-accent: #d97706;
+  --qf-accent-soft: #fffbeb;
+  --qf-success: #059669;
+  --qf-success-soft: #ecfdf5;
+  --qf-danger: #dc2626;
+  --qf-danger-soft: #fef2f2;
+  --qf-info: #0284c7;
+  --qf-info-soft: #f0f9ff;
+
+  --qf-ink: #0f172a;
+  --qf-ink-muted: #475569;
+  --qf-page: #f8fafc;
+  --qf-surface: #ffffff;
+  --qf-surface-muted: #f1f5f9;
+  --qf-border: #e2e8f0;
+  --qf-border-subtle: color-mix(in srgb, #64748b 22%, transparent);
+
+  --qf-text-muted: var(--qf-ink-muted);
+  --qf-elevation-0: none;
+  --qf-elevation-1: 0 1px 2px rgb(15 23 42 / 5%), 0 4px 12px rgb(15 23 42 / 4%);
+  --qf-elevation-2: 0 4px 6px rgb(15 23 42 / 5%), 0 10px 24px rgb(15 23 42 / 6%);
+  --qf-elevation-dialog: 0 12px 40px rgb(15 23 42 / 16%);
+
+  --qf-font: Roboto, 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --qf-font-display: Roboto, 'Segoe UI', system-ui, sans-serif;
+
+  --qf-transition: 160ms ease;
+  color-scheme: light;
+}
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        theme-type: light,
+        primary: mat.$violet-palette,
+        tertiary: mat.$cyan-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overflow-x: clip;
+}
+
+body {
+  margin: 0;
+  background-color: var(--qf-page);
+  color: var(--qf-ink);
+  font: var(--mat-sys-body-medium);
+  font-family: var(--qf-font);
+  -webkit-font-smoothing: antialiased;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--qf-primary);
+  outline-offset: 2px;
+}
+
+a {
+  color: var(--qf-primary-dark);
+}
+
+button .mat-mdc-progress-spinner {
+  display: inline-block;
+  margin: 0 auto;
+}
+
+/* Button radii: app actions medium; marketing CTAs softer; chips stay pill */
+.mat-mdc-unelevated-button,
+.mat-mdc-raised-button,
+.mat-mdc-outlined-button,
+.mat-mdc-protected-button {
+  --mdc-filled-button-container-shape: var(--qf-radius-md);
+  --mdc-outlined-button-container-shape: var(--qf-radius-md);
+  --mdc-protected-button-container-shape: var(--qf-radius-md);
+  border-radius: var(--qf-radius-md) !important;
+}
+
+.landing-top .mat-mdc-unelevated-button,
+.landing-top .mat-mdc-raised-button,
+.landing-top .mat-mdc-outlined-button,
+.landing .mat-mdc-unelevated-button,
+.landing .mat-mdc-raised-button,
+.landing .mat-mdc-outlined-button,
+.hero-cta .mat-mdc-button-base,
+.cta-row .mat-mdc-button-base,
+.landing-hero .mat-mdc-button-base,
+.pricing-card .mat-mdc-button-base {
+  --mdc-filled-button-container-shape: var(--qf-radius-lg);
+  --mdc-outlined-button-container-shape: var(--qf-radius-lg);
+  border-radius: var(--qf-radius-lg) !important;
+}
+
+.mat-mdc-button-toggle,
+.qf-chip,
+.period-bar .mat-button-toggle-group .mat-button-toggle {
+  border-radius: var(--qf-radius-pill);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ----- Shared page chrome ----- */
+.qf-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--qf-space-3);
+  margin-bottom: var(--qf-space-1);
+}
+
+.qf-page-header h1,
+.page-header h1 {
+  margin: 0 0 var(--qf-space-2);
+  font-family: var(--qf-font-display);
+  font-size: clamp(1.5rem, 2.2vw, 1.875rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--qf-ink);
+  line-height: 1.2;
+}
+
+.qf-page-header .subtitle,
+.page-header .subtitle,
+.subtitle {
+  margin: 0;
+  color: var(--qf-ink-muted);
+  line-height: 1.45;
+  max-width: 40rem;
+}
+
+/* ----- Cards ----- */
+.qf-card,
+.metric-card,
+.panel,
+.plan-card,
+.pricing-card,
+.section-card {
+  background: var(--qf-surface);
+  border: 1px solid var(--qf-border);
+  border-radius: var(--qf-radius-lg);
+  box-shadow: var(--qf-elevation-0);
+}
+
+.qf-card--elevated {
+  box-shadow: var(--qf-elevation-1);
+}
+
+/* ----- Status chips (color + text; never color-only) ----- */
+.qf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--qf-radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.qf-chip--draft,
+.qf-chip--active {
+  background: var(--qf-info-soft);
+  color: #0369a1;
+  border-color: color-mix(in srgb, var(--qf-info) 25%, transparent);
+}
+
+.qf-chip--sent {
+  background: var(--qf-primary-soft);
+  color: var(--qf-primary-dark);
+  border-color: color-mix(in srgb, var(--qf-primary) 28%, transparent);
+}
+
+.qf-chip--paid,
+.qf-chip--recorded {
+  background: var(--qf-success-soft);
+  color: #047857;
+  border-color: color-mix(in srgb, var(--qf-success) 28%, transparent);
+}
+
+.qf-chip--partial,
+.qf-chip--partially_paid,
+.qf-chip--partially-paid {
+  background: var(--qf-accent-soft);
+  color: #b45309;
+  border-color: color-mix(in srgb, var(--qf-accent) 30%, transparent);
+}
+
+.qf-chip--cancelled,
+.qf-chip--voided,
+.qf-chip--archived {
+  background: var(--qf-danger-soft);
+  color: #b91c1c;
+  border-color: color-mix(in srgb, var(--qf-danger) 25%, transparent);
+}
+
+.qf-chip--unpaid {
+  background: var(--qf-surface-muted);
+  color: var(--qf-ink-muted);
+  border-color: var(--qf-border);
+}
+
+/* ----- Empty / loading states ----- */
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--qf-space-3);
+  text-align: center;
+  padding: var(--qf-space-8) var(--qf-space-4);
+  background: var(--qf-surface);
+  border: 1px dashed var(--qf-border);
+  border-radius: var(--qf-radius-xl);
+}
+
+.state-empty .empty-icon,
+.state-empty mat-icon.empty-icon {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--qf-radius-lg);
+  background: var(--qf-primary-soft);
+  color: var(--qf-primary-dark);
+}
+
+.state-empty h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.state-empty p {
+  margin: 0;
+  max-width: 28rem;
+  color: var(--qf-ink-muted);
+  line-height: 1.5;
+}
+
+.state-error {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--qf-danger) 35%, transparent);
+  background: var(--qf-danger-soft);
+  color: #991b1b;
+}
+
+/* ----- KPI accents ----- */
+.metric-card.kpi-invoiced {
+  border-top: 3px solid var(--qf-primary);
+  background: linear-gradient(180deg, var(--qf-primary-soft) 0%, var(--qf-surface) 42%);
+}
+
+.metric-card.kpi-collected {
+  border-top: 3px solid var(--qf-success);
+  background: linear-gradient(180deg, var(--qf-success-soft) 0%, var(--qf-surface) 42%);
+}
+
+.metric-card.kpi-outstanding {
+  border-top: 3px solid var(--qf-accent);
+  background: linear-gradient(180deg, var(--qf-accent-soft) 0%, var(--qf-surface) 42%);
+}
+
+.metric-card.kpi-customers {
+  border-top: 3px solid var(--qf-secondary);
+  background: linear-gradient(180deg, var(--qf-secondary-soft) 0%, var(--qf-surface) 42%);
+}
+
+.metric-card .value {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ----- Icon surfaces ----- */
+.qf-icon-surface {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--qf-radius-md);
+  flex-shrink: 0;
+}
+
+.qf-icon-surface--primary {
+  background: var(--qf-primary-soft);
+  color: var(--qf-primary-dark);
+}
+
+.qf-icon-surface--secondary {
+  background: var(--qf-secondary-soft);
+  color: #0e7490;
+}
+
+.qf-icon-surface--accent {
+  background: var(--qf-accent-soft);
+  color: #b45309;
+}
+
+.qf-icon-surface--success {
+  background: var(--qf-success-soft);
+  color: #047857;
+}
+
+/* ----- Totals summary ----- */
+.totals.qf-totals,
+.panel.totals {
+  border-color: color-mix(in srgb, var(--qf-primary) 22%, var(--qf-border));
+}
+
+.panel.totals .grand dt,
+.panel.totals .grand dd {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--qf-primary-dark);
+}
+
+/* ----- Tables ----- */
+.mat-mdc-row:hover {
+  background: color-mix(in srgb, var(--qf-primary) 4%, transparent);
+}
+
+/* ----- Motion ----- */
+a.mat-mdc-button-base,
+button.mat-mdc-button-base,
+.metric-card,
+.plan-card,
+.pricing-card {
+  transition:
+    background-color var(--qf-transition),
+    box-shadow var(--qf-transition),
+    border-color var(--qf-transition),
+    transform var(--qf-transition);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .pricing-card:hover,
+  .plan-card:hover:not(.current) {
+    box-shadow: var(--qf-elevation-1);
+    transform: translateY(-2px);
+  }
+}
