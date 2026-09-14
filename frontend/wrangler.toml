@@ -1,0 +1,8 @@
+name = "quoteflow-staging"
+compatibility_date = "2025-09-01"
+pages_build_output_dir = "dist/frontend/browser"
+
+# Staging Pages project. Production must use a separate project/name.
+# Deploy: npm run build && npx wrangler pages deploy
+# Future Git integration: Cloudflare dashboard → Connect repo → root frontend,
+# Node 22, npm ci, npm run build, output dist/frontend/browser.

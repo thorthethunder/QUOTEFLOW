@@ -1,9 +1,12 @@
-# Copy/adapt to `public/_redirects` for Cloudflare Pages same-origin API proxy.
-# Replace BACKEND_ORIGIN with the Railway HTTPS host (no scheme path suffix).
-# Example destination: https://quoteflow-staging.up.railway.app
+# Copy/adapt notes for Cloudflare Pages same-origin API proxy.
 #
-# /api/*  https://BACKEND_ORIGIN/api/:splat  200
-# /*      /index.html   200
+# Preferred staging topology (implemented):
+#   Pages Function: functions/api/[[path]].ts
+#   Fixed backend: https://quoteflow-backend-staging.up.railway.app
+#   SPA config.json: { "apiBaseUrl": "/api/v1" }
 #
-# Keep /api above the SPA catch-all. Do not commit a production secret host by accident;
-# staging hostnames are OK if non-sensitive.
+# Alternative _redirects proxy (no Function), keep /api above SPA catch-all:
+#   /api/*  https://quoteflow-backend-staging.up.railway.app/api/:splat  200
+#   /*      /index.html   200
+#
+# Prefer Function for explicit non-open-proxy + Cache-Control: private, no-store.

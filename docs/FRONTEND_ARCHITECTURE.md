@@ -34,7 +34,7 @@ Standalone components, lazy routes, signals for auth status.
 
 **Auth (Phase 14 affirmations):** access JWT is memory-only (never localStorage/sessionStorage); refresh is HttpOnly cookie; Angular route guards are UX only — backend remains authoritative. SPA CSP is set in `index.html` (Razorpay checkout origins allowlisted; Material currently needs `style-src 'unsafe-inline'`). Login `returnUrl` is restricted to same-app relative paths via `safeReturnUrl` (rejects `//…` and absolute URLs).
 
-**API base URL (Phase 15/16):** production default `apiBaseUrl: '/api/v1'`. Hosted staging loads public `/config.json` at runtime (`loadPublicAppConfig`) so Cloudflare Pages can change the API target without rebuilding TypeScript. Prefer same-origin `/api` proxy on Pages for cookie safety; see [DEPLOYMENT.md](DEPLOYMENT.md).
+**API base URL (Phase 15/16):** production default `apiBaseUrl: '/api/v1'`. Hosted staging loads public `/config.json` at runtime (`loadPublicAppConfig`) so Cloudflare Pages can change the API target without rebuilding TypeScript. **Staging topology:** same-origin `/api` via Pages Function proxy to Railway (see [DEPLOYMENT.md](DEPLOYMENT.md) / ADR-021).
 
 Customer / Quotation list UI: table ≥768px, card list on smaller viewports; server-side search (debounced) + Material paginator. Quotation editor uses stacked line-item cards on mobile; live totals are preview-only — backend save is authoritative.
 

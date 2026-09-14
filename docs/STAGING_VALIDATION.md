@@ -1,35 +1,40 @@
 # Staging validation log
 
-**Status: Phase 16 NOT CLOSED — hosted bring-up incomplete**
+**Status: Phase 16 CLOSED PASS** (hosted staging bring-up complete — not production approval)
 
-Updated after git remote push (`2f57490` on `main`).
+Final hosted revision (frontend): Cloudflare Pages `quoteflow-staging` @ git `main` after Phase 16 Task 3 commit (see report SHA). Backend Railway staging previously green at `290c4ef` + env CORS update.
 
 | Check | Result | Evidence |
 |-------|--------|----------|
-| Git commits + remote + push | **PASS** | `main` @ `2f57490` → `origin` https://github.com/thorthethunder/QUOTEFLOW |
-| CI green | **NOT VERIFIED** | Private repo; Actions UI/API not readable without GitHub login in this agent session |
-| Railway backend deploy | **NOT RUN** | `railway whoami` → Unauthorized; no `RAILWAY_TOKEN` |
-| Cloudflare Pages deploy | **NOT RUN** | No Cloudflare API token / wrangler login |
-| HTTPS frontend/backend | **NOT RUN** | — |
-| Flyway on managed Postgres | **NOT RUN** | — |
-| Hosted login/refresh/logout | **NOT RUN** | — |
-| Cookie SameSite topology | **NOT RUN** | Prep: same-origin `/api` proxy documented |
-| CORS exact origin | **NOT RUN** | — |
-| Hosted core E2E | **NOT RUN** | — |
-| Container Trivy scan | **NOT COMPLETED** | Tool unavailable |
+| Git commits + remote + push | **PASS** | `main` → `origin` https://github.com/thorthethunder/QUOTEFLOW |
+| CI green | **NOT VERIFIED** | Private repo Actions not readable from this agent session |
+| Railway backend deploy | **PASS** | `quoteflow-backend` Online · `https://quoteflow-backend-staging.up.railway.app` |
+| Railway PostgreSQL | **PASS** | Postgres 18.6 · private `*.railway.internal` · no public TCP proxy |
+| Flyway on managed Postgres | **PASS** | V1–V10 applied; restart stays at v10 |
+| Hibernate validate | **PASS** | Startup with `ddl-auto=validate` |
+| Cloudflare Pages deploy | **PASS** | Project `quoteflow-staging` · `https://quoteflow-staging.pages.dev` |
+| HTTPS frontend/backend | **PASS** | Pages + Railway HTTPS; no mixed content |
+| Same-origin `/api` proxy | **PASS** | Pages Function `functions/api/[[path]].ts` → fixed Railway origin |
+| Hosted login/refresh/logout | **PASS** | Chromium E2E 2026-09-14 |
+| Cookie SameSite topology | **PASS** | `qf_refresh` HttpOnly+Secure+SameSite=Lax+Path=/api/v1/auth on Pages host |
+| XSRF | **PASS** | missing/wrong → 403; valid refresh/logout → OK |
+| CORS exact origin | **PASS** | Railway `CORS_ALLOWED_ORIGINS=https://quoteflow-staging.pages.dev` (browser traffic same-origin via proxy) |
+| Hosted core E2E | **PASS** | customer → quote → PDF → invoice → payments → receipt → dashboard/plan |
+| FREE plan limit | **PASS** | 6th customer → `PLAN_LIMIT_REACHED` 403 |
+| Cross-tenant | **PASS** | 404 |
+| Rate limit | **PASS** | auth login 429 (per-instance) |
+| Staging noindex | **PASS** | `robots.txt` Disallow + `X-Robots-Tag: noindex, nofollow` |
+| Container Trivy scan | **NOT COMPLETED** | Tool unavailable historically |
 | Maven CVE scan | **NOT COMPLETED** | — |
 
-## Preparation completed in-repo (not hosted evidence)
+## Topology (authoritative)
 
-- Runtime `/config.json` API base loader
-- Cloudflare `_redirects` SPA + same-origin API proxy example
-- `SPRING_PROFILES_ACTIVE=prod,staging` + `EMAIL_PROVIDER=DISABLED`
-- `backend/railway.toml` Dockerfile + readiness healthcheck hints
-- Docs: ENVIRONMENTS, DEPLOYMENT_CHECKLIST, ADR-021
+- Frontend: `https://quoteflow-staging.pages.dev`
+- Browser API: same-origin `/api/v1` → Pages Function → `https://quoteflow-backend-staging.up.railway.app`
+- `config.json`: `{ "apiBaseUrl": "/api/v1" }` with `Cache-Control: no-store`
+- Do **not** use direct `pages.dev` ↔ `railway.app` credentialed cookies without proxy
 
-## To finish Phase 16
+## Deferred forever until final gates
 
-1. Confirm GitHub Actions CI green on `main` (in browser while signed in)
-2. `railway login` (or set `RAILWAY_TOKEN`) → create staging project + Postgres → deploy `backend/` Dockerfile with env from DEPLOYMENT.md
-3. Cloudflare Pages: connect repo, root `frontend`, Node 22, configure `/api` proxy or same-site domains
-4. Re-run hosted auth/CORS/cookie/core flow matrix and replace NOT RUN with PASS/FAIL + timestamps
+- Razorpay Test Mode E2E → FINAL PAYMENT VALIDATION  
+- Resend real-provider/domain E2E → FINAL EXTERNAL-INTEGRATION VALIDATION  

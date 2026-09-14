@@ -1,1 +1,3 @@
+# SPA fallback. /api/* is handled by Pages Function (functions/api/[[path]].ts).
+# Do not add a catch-all that shadows /api.
 /*    /index.html   200

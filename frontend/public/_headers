@@ -1,0 +1,15 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  X-Frame-Options: DENY
+  X-Robots-Tag: noindex, nofollow
+
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/config.json
+  Cache-Control: no-store
+
+/robots.txt
+  Cache-Control: no-store

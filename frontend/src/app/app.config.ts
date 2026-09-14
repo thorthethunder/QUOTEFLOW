@@ -29,8 +29,9 @@ export const appConfig: ApplicationConfig = {
     ),
     provideAnimationsAsync(),
     provideAppInitializer(async () => {
-      await loadPublicAppConfig();
+      // inject() must run synchronously in an injection context (before any await).
       const auth = inject(AuthService);
+      await loadPublicAppConfig();
       return firstValueFrom(auth.initializeSession());
     }),
   ],

@@ -61,26 +61,43 @@ HIKARI_MAXIMUM_POOL_SIZE=5
 
 | Setting | Value |
 |---------|--------|
+| Project | `quoteflow-staging` (staging-only; not production) |
+| URL | `https://quoteflow-staging.pages.dev` |
 | Root directory | `frontend` |
-| Node version | **22** (pin in dashboard / `.nvmrc`) |
+| Node version | **22** (`.nvmrc`) |
 | Install | `npm ci` |
-| Build | `npm run build` (= production Angular build) |
+| Build | `npm run build:staging` (production Angular build + staging robots overlay) |
 | Output | `dist/frontend/browser` |
 | SPA | `public/_redirects` → `/* /index.html 200` |
+| API proxy | Pages Function `functions/api/[[path]].ts` → fixed Railway staging origin |
+| Headers | `public/_headers` (nosniff, referrer, frame deny, staging `X-Robots-Tag`) |
+
+### CLI deploy (current)
+
+```bash
+cd frontend
+npm ci
+npm run deploy:staging
+# or: npm run build:staging && npx wrangler pages deploy dist/frontend/browser --project-name=quoteflow-staging --branch=staging
+```
+
+### Future Git-based path
+
+Cloudflare dashboard → Connect repo → root `frontend`, Node 22, `npm ci`, `npm run build:staging`, output `dist/frontend/browser`. Keep Functions + `_headers` / `_redirects` in repo.
 
 ### API base URL strategy (Cloudflare-compatible)
 
-**Recommended:** keep `config.json` → `{ "apiBaseUrl": "/api/v1" }` and add a **same-origin reverse proxy** line in `_redirects` (see `_redirects.same-origin-api.example`) so the browser talks only to the Pages host. Refresh cookies stay first-party (SameSite=Lax).
+**Implemented:** `config.json` → `{ "apiBaseUrl": "/api/v1" }` with same-origin Pages Function proxy to Railway so refresh cookies stay first-party (SameSite=Lax).
 
 **Alternative:** same-site custom domains (`staging.` + `api-staging.`) with absolute `apiBaseUrl` in `config.json`.
 
-**Do not:** credentialed CORS to `*.pages.dev` wildcards; do not bake localhost into hosted `config.json`.
+**Do not:** credentialed CORS to `*.pages.dev` wildcards; do not bake localhost into hosted `config.json`; do not casually set SameSite=None.
 
-Staging robots: copy `robots.staging.txt` → `robots.txt` in the Pages build command if the project should be noindex.
+Staging robots: `npm run build:staging` copies `robots.staging.txt` → dist `robots.txt` (Disallow: /). Production must not use the staging overlay.
 
 ### Headers / CSP
 
-Prefer Cloudflare Transform Rules / Headers for CSP/nosniff/Referrer-Policy when ready. Until then, `index.html` meta CSP remains; avoid duplicate conflicting policies.
+`public/_headers` sets nosniff / referrer / Permissions-Policy / X-Frame-Options / staging noindex. SPA CSP remains in `index.html` meta (`connect-src 'self'` for same-origin `/api`). Avoid adding a conflicting CSP response header.
 
 ## Cookie / CORS critical rules
 

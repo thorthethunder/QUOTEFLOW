@@ -9,6 +9,7 @@
       Browser CSP for the Angular SPA. API responses use a tighter CSP (default-src 'none').
       Razorpay Checkout script/frame origins are allowlisted only when billing checkout is used.
       style-src includes 'unsafe-inline' for Angular Material; tighten with nonces in a later hardening pass if needed.
+      connect-src 'self' supports same-origin /api proxy (Pages → Railway).
     -->
     <meta
       http-equiv="Content-Security-Policy"
