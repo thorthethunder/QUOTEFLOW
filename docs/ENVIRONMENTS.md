@@ -22,7 +22,9 @@ Prefer same registrable domain:
 - `https://staging.example.com` (Pages)
 - `https://api-staging.example.com` (Railway)
 
-**Current hosted staging (Phase 16):** Cloudflare Pages `https://quoteflow-staging.pages.dev` with same-origin `/api/*` Pages Function proxy to Railway `https://quoteflow-backend-staging.up.railway.app`. Browser cookies are first-party on the Pages host (SameSite=Lax).
+**Current hosted staging (Phase 16):** Cloudflare Pages `https://quoteflow-staging.pages.dev` with same-origin `/api/*` Pages Function proxy to Railway `https://quoteflow-backend-staging.up.railway.app` (`BACKEND_ORIGIN`). Browser cookies are first-party on the Pages host (SameSite=Lax).
+
+Production topology and launch gates: [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md). Production must set `BACKEND_ORIGIN` to the production API origin and must **not** ship the staging noindex/`build:staging` robots overlay.
 
 If using `*.pages.dev` + `*.up.railway.app` **without** a same-origin `/api` proxy, refresh cookies are **cross-site** and will fail under SameSite=Lax. That topology is a **Phase 16 blocker** unless fixed via proxy or custom domain — do not “fix” with SameSite=None casually.
 
