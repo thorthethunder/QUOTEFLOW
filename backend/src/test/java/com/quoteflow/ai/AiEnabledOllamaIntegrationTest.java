@@ -61,6 +61,7 @@ class AiEnabledOllamaIntegrationTest {
 	static void aiProps(DynamicPropertyRegistry registry) {
 		registry.add("quoteflow.ai.enabled", () -> "true");
 		registry.add("quoteflow.ai.provider", () -> "OLLAMA");
+		registry.add("quoteflow.ai.adapter", () -> "legacy-rest");
 		registry.add("quoteflow.ai.ollama.base-url", () -> BASE_URL);
 		registry.add("quoteflow.ai.ollama.model", () -> "qwen3:8b");
 	}

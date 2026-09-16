@@ -32,6 +32,7 @@ public class AiConfiguration {
 	@Bean
 	@ConditionalOnProperty(prefix = "quoteflow.ai", name = "enabled", havingValue = "true")
 	@ConditionalOnProperty(prefix = "quoteflow.ai", name = "provider", havingValue = "OLLAMA", matchIfMissing = true)
+	@ConditionalOnProperty(prefix = "quoteflow.ai", name = "adapter", havingValue = "legacy-rest")
 	OllamaClient ollamaClient(AiProperties properties, ObjectMapper objectMapper) {
 		return new OllamaClient(properties, objectMapper);
 	}

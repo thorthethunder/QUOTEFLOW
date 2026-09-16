@@ -9,14 +9,14 @@ Multi-tenant SaaS for freelancers and small service businesses to manage custome
 **Phases 1–16: CLOSED PASS** (hosted staging on Cloudflare Pages + Railway).  
 **Phase 17:** production-readiness review — see [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md).  
 **Production launch:** NOT READY until domain/topology, backups, secrets, and provider final gates complete.  
-**AI:** Phase 1 provider foundation + Ollama local support — see [docs/AI_LOCAL_DEVELOPMENT.md](docs/AI_LOCAL_DEVELOPMENT.md) (`AI_ENABLED=false` by default).
+**AI:** Phase 2 Quote Assistant + Spring AI / Ollama — [docs/QUOTE_ASSISTANT.md](docs/QUOTE_ASSISTANT.md), [docs/AI_LOCAL_DEVELOPMENT.md](docs/AI_LOCAL_DEVELOPMENT.md) (`AI_ENABLED=false` by default).
 
 - Monorepo (`frontend/`, `backend/`, `docs/`, `.github/`)
 - Angular auth shell, customers, quotations + PDF + email, invoices + reminders, payments + receipt PDF, dashboard, Plan & usage + checkout; Spring Boot modular monolith + Actuator
 - PostgreSQL + Flyway V1–V10 (subscriptions, platform billing, notification outbox)
 - Hosted staging: same-origin `/api` Pages Function → Railway → private Postgres 18
 
-Not implemented yet: tenant invoice Pay Now, Quote Assistant UI, refunds, Redis, Kafka, platform-admin UI, Grafana, object storage.
+Not implemented yet: tenant invoice Pay Now, Business Copilot, refunds, Redis, Kafka, platform-admin UI, Grafana, object storage.
 
 ## Architecture (high level)
 

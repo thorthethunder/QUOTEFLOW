@@ -4,7 +4,15 @@
       <h1>{{ isEdit ? 'Edit quotation' : 'New quotation' }}</h1>
       <p class="subtitle">Totals shown while editing are a preview. Saved values come from the server.</p>
     </div>
-    <a mat-button routerLink="/app/quotations">Back to list</a>
+    <div class="header-actions">
+      @if (!isEdit && aiAssistantAvailable()) {
+        <button mat-stroked-button type="button" (click)="openQuoteAssistant()">
+          <mat-icon>auto_awesome</mat-icon>
+          Draft with AI
+        </button>
+      }
+      <a mat-button routerLink="/app/quotations">Back to list</a>
+    </div>
   </header>
 
   @if (loading()) {

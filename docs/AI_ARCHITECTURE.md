@@ -1,7 +1,7 @@
 # QuoteFlow AI Architecture
 
-> **Status: AI Phase 1 IMPLEMENTED** — provider foundation + Ollama.  
-> User-facing assistants / agents / RAG: **not started** (AI Phase 2+).
+> **Status: AI Phase 2 IMPLEMENTED** — provider foundation (Phase 1) + Spring AI Ollama + Quote Assistant.  
+> Business Copilot / agents / RAG: **not started**.
 
 ## Principle
 
@@ -100,9 +100,9 @@ Local Ollama: provider API monetary cost is typically zero; **compute/infrastruc
 
 | Phase | Scope | Status |
 |-------|--------|--------|
-| **AI Phase 1** | Provider foundation + Ollama + qwen3:8b local | **THIS PHASE** |
-| **AI Phase 2** | Quote Assistant | NEXT |
-| **AI Phase 3** | Read-only Business Copilot | Planned |
+| **AI Phase 1** | Provider foundation + Ollama + qwen3:8b local | **CLOSED PASS** |
+| **AI Phase 2** | Quote Assistant + Spring AI | **THIS PHASE** |
+| **AI Phase 3** | Read-only Business Copilot | NEXT |
 | **AI Phase 4** | Controlled agent tools | Planned |
 | **AI Phase 5** | Payment Reminder Assistant | Planned |
 | **AI Phase 6** | Reporting insights | Planned |

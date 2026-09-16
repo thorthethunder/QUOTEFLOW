@@ -32,6 +32,7 @@ class AiRepositoryBoundaryTest {
 				DisabledAiProvider.class,
 				OllamaAiProvider.class,
 				OllamaClient.class,
+				com.quoteflow.ai.provider.spring.SpringAiOllamaProvider.class,
 				StructuredOutputValidator.class,
 				LoggingAiUsageRecorder.class);
 		for (Class<?> type : aiTypes) {

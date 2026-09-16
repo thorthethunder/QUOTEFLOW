@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConditionalOnProperty(prefix = "quoteflow.ai", name = "enabled", havingValue = "true")
 @ConditionalOnProperty(prefix = "quoteflow.ai", name = "provider", havingValue = "OLLAMA", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "quoteflow.ai", name = "adapter", havingValue = "legacy-rest")
 public class OllamaAiProvider implements AiProvider {
 
 	private final OllamaClient client;

@@ -18,6 +18,11 @@ public class AiProperties {
 	private String provider = "OLLAMA";
 
 	/**
+	 * spring-ai (default) or legacy-rest (Phase 1 RestClient adapter).
+	 */
+	private String adapter = "spring-ai";
+
+	/**
 	 * When true, logs truncated prompts at DEBUG — never enable by default in production.
 	 */
 	private boolean logPrompts = false;
@@ -25,6 +30,7 @@ public class AiProperties {
 	private int maxResponseChars = 256_000;
 
 	private final Ollama ollama = new Ollama();
+	private final QuoteAssistant quoteAssistant = new QuoteAssistant();
 
 	public boolean isEnabled() {
 		return enabled;
@@ -40,6 +46,14 @@ public class AiProperties {
 
 	public void setProvider(String provider) {
 		this.provider = provider;
+	}
+
+	public String getAdapter() {
+		return adapter;
+	}
+
+	public void setAdapter(String adapter) {
+		this.adapter = adapter;
 	}
 
 	public boolean isLogPrompts() {
@@ -66,6 +80,40 @@ public class AiProperties {
 
 	public Ollama getOllama() {
 		return ollama;
+	}
+
+	public QuoteAssistant getQuoteAssistant() {
+		return quoteAssistant;
+	}
+
+	public static class QuoteAssistant {
+		private int maxPromptChars = 4000;
+		private int perUserPerMinute = 10;
+		private int perTenantPerMinute = 30;
+
+		public int getMaxPromptChars() {
+			return maxPromptChars;
+		}
+
+		public void setMaxPromptChars(int maxPromptChars) {
+			this.maxPromptChars = Math.max(200, Math.min(maxPromptChars, 20_000));
+		}
+
+		public int getPerUserPerMinute() {
+			return perUserPerMinute;
+		}
+
+		public void setPerUserPerMinute(int perUserPerMinute) {
+			this.perUserPerMinute = Math.max(1, perUserPerMinute);
+		}
+
+		public int getPerTenantPerMinute() {
+			return perTenantPerMinute;
+		}
+
+		public void setPerTenantPerMinute(int perTenantPerMinute) {
+			this.perTenantPerMinute = Math.max(1, perTenantPerMinute);
+		}
 	}
 
 	public static class Ollama {

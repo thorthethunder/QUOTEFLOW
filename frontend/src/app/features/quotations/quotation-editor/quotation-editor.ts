@@ -9,6 +9,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -19,6 +20,11 @@ import { debounceTime } from 'rxjs';
 import { CustomerApiService } from '../../customers/customer-api.service';
 import { CustomerSummary } from '../../customers/customer.models';
 import { EntitlementStore } from '../../plan/entitlement.store';
+import { QuoteAssistantApiService } from '../quote-assistant-api.service';
+import {
+  QuoteAssistantDialogComponent,
+  QuoteAssistantDialogResult,
+} from '../quote-assistant-dialog';
 import { QuotationApiService } from '../quotation-api.service';
 import {
   DiscountType,
@@ -33,6 +39,7 @@ import {
     RouterLink,
     CurrencyPipe,
     MatButtonModule,
+    MatDialogModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
@@ -46,6 +53,8 @@ export class QuotationEditorComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(QuotationApiService);
   private readonly customersApi = inject(CustomerApiService);
+  private readonly quoteAssistantApi = inject(QuoteAssistantApiService);
+  private readonly dialog = inject(MatDialog);
   private readonly entitlements = inject(EntitlementStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -62,6 +71,7 @@ export class QuotationEditorComponent implements OnInit {
   readonly showViewPlans = signal(false);
   readonly customerOptions = signal<CustomerSummary[]>([]);
   readonly customerSearch = this.fb.nonNullable.control('');
+  readonly aiAssistantAvailable = signal(false);
 
   readonly form = this.fb.nonNullable.group({
     customerId: ['', Validators.required],
@@ -104,6 +114,10 @@ export class QuotationEditorComponent implements OnInit {
       this.load(id);
     } else {
       this.preview.set(this.computePreview());
+      this.quoteAssistantApi.capabilities().subscribe({
+        next: (caps) => this.aiAssistantAvailable.set(!!caps.quoteAssistant),
+        error: () => this.aiAssistantAvailable.set(false),
+      });
       this.entitlements.refresh().subscribe((e) => {
         if (e && !this.entitlements.canCreateQuotation()) {
           this.planLimitHint.set(
@@ -113,6 +127,56 @@ export class QuotationEditorComponent implements OnInit {
         }
       });
     }
+  }
+
+  openQuoteAssistant(): void {
+    if (this.isEdit || !this.aiAssistantAvailable()) {
+      return;
+    }
+    const ref = this.dialog.open(QuoteAssistantDialogComponent, {
+      width: 'min(40rem, 96vw)',
+      maxWidth: '96vw',
+      autoFocus: 'first-tabbable',
+      data: { currency: this.currency() },
+    });
+    ref.afterClosed().subscribe((result: QuoteAssistantDialogResult | undefined) => {
+      if (!result) {
+        return;
+      }
+      this.applyAssistantDraft(result);
+    });
+  }
+
+  private applyAssistantDraft(result: QuoteAssistantDialogResult): void {
+    if (result.customerId) {
+      this.form.controls.customerId.setValue(result.customerId);
+      this.searchCustomers(result.proposedCustomerName ?? '');
+    } else if (result.proposedCustomerName) {
+      this.customerSearch.setValue(result.proposedCustomerName);
+      this.searchCustomers(result.proposedCustomerName);
+      this.errorMessage.set(
+        `No customer selected for “${result.proposedCustomerName}”. Choose or create a customer before saving.`,
+      );
+    }
+    this.form.controls.discountType.setValue(result.discountType);
+    this.form.controls.discountValue.setValue(result.discountValue);
+    this.form.controls.taxRate.setValue(result.taxRate);
+    if (result.notes) {
+      this.form.controls.notes.setValue(result.notes);
+    }
+    while (this.items.length) {
+      this.items.removeAt(0);
+    }
+    for (const item of result.items) {
+      const group = this.createItemGroup();
+      group.patchValue({
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      });
+      this.items.push(group);
+    }
+    this.preview.set(this.computePreview());
   }
 
   addItem(): void {

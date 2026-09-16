@@ -34,6 +34,11 @@ spring:
     enabled: ${FLYWAY_ENABLED:true}
     locations: classpath:db/migration
     baseline-on-migrate: true
+  ai:
+    # Keep Spring AI chat autoconfig off; QuoteFlow wires Ollama only when AI_ENABLED=true.
+    model:
+      chat: none
+      embedding: none
 
 management:
   endpoints:
@@ -106,8 +111,14 @@ quoteflow:
     # Optional subsystem. Default false — Ollama not required for core SaaS.
     enabled: ${AI_ENABLED:false}
     provider: ${AI_PROVIDER:OLLAMA}
+    # spring-ai (default) | legacy-rest
+    adapter: ${AI_ADAPTER:spring-ai}
     log-prompts: ${AI_LOG_PROMPTS:false}
     max-response-chars: ${AI_MAX_RESPONSE_CHARS:256000}
+    quote-assistant:
+      max-prompt-chars: ${AI_QUOTE_ASSISTANT_MAX_PROMPT:4000}
+      per-user-per-minute: ${AI_QUOTE_ASSISTANT_RATE_USER:10}
+      per-tenant-per-minute: ${AI_QUOTE_ASSISTANT_RATE_TENANT:30}
     ollama:
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
       model: ${OLLAMA_MODEL:qwen3:8b}

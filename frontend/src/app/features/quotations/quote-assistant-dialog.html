@@ -1,0 +1,92 @@
+<h2 mat-dialog-title>Draft with AI</h2>
+<mat-dialog-content class="quote-assistant">
+  <p class="hint">
+    Describe the quotation in plain language. Review every value before saving — AI does not create the quotation.
+  </p>
+  <p class="example">
+    Example: Raj Electrical needs 2 ceiling fans at ₹3,000 each, 5 switches at ₹250 each, wiring ₹1,800 and labour ₹2,500.
+  </p>
+
+  @if (errorMessage(); as err) {
+    <p class="error" role="alert">{{ err }}</p>
+  }
+
+  <mat-form-field appearance="outline" class="full" subscriptSizing="dynamic">
+    <mat-label>Quotation request</mat-label>
+    <textarea
+      matInput
+      rows="5"
+      [formControl]="promptControl"
+      maxlength="4000"
+      [disabled]="generating()"
+      aria-describedby="ai-prompt-help"
+    ></textarea>
+    @if (promptControl.touched && promptControl.invalid) {
+      <mat-error>Enter a short description of the quotation (max 4000 characters).</mat-error>
+    }
+  </mat-form-field>
+  <p id="ai-prompt-help" class="sr-help">Local models may take longer than a cloud API.</p>
+
+  <div class="actions-row">
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      (click)="generate()"
+      [disabled]="generating() || promptControl.invalid"
+    >
+      @if (generating()) {
+        <mat-spinner diameter="18"></mat-spinner>
+        <span>Preparing your quotation draft…</span>
+      } @else {
+        Generate draft
+      }
+    </button>
+  </div>
+
+  @if (proposal(); as p) {
+    <section class="proposal" aria-live="polite">
+      <h3>Review proposal</h3>
+      @for (warning of p.warnings; track warning) {
+        <p class="warning" role="status">{{ warning }}</p>
+      }
+      <p>
+        <strong>Customer:</strong>
+        @if (p.customer.matched) {
+          {{ p.customer.name }}
+        } @else {
+          {{ p.proposedCustomerName || 'Not matched — select manually' }}
+        }
+      </p>
+      <ul class="items">
+        @for (item of p.items; track $index) {
+          <li [class.needs-review]="item.needsReview">
+            <span class="desc">{{ item.description || '(missing description)' }}</span>
+            <span class="meta">
+              Qty {{ item.quantity ?? '—' }} ·
+              {{ item.unitPrice != null ? (item.unitPrice | currency: (p.calculation?.currency || data.currency)) : 'price missing' }}
+            </span>
+          </li>
+        }
+      </ul>
+      @if (p.calculationAvailable && p.calculation; as calc) {
+        <p class="totals">
+          Preview total (server calculator):
+          <strong>{{ calc.total | currency: calc.currency }}</strong>
+        </p>
+      }
+    </section>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" mat-dialog-close [disabled]="generating()">Cancel</button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    (click)="useDraft()"
+    [disabled]="!proposal() || generating()"
+  >
+    Use this draft
+  </button>
+</mat-dialog-actions>
