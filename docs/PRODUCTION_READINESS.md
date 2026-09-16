@@ -18,7 +18,7 @@ No secrets belong in this file.
 | Item | Value |
 |------|--------|
 | Git SHA (Phase 16 close) | `31d6dc2` |
-| Git SHA (Phase 17 review) | See latest `main` after Phase 17 commit |
+| Git SHA (Phase 17 review) | `9684a4f` |
 | Frontend | `https://quoteflow-staging.pages.dev` |
 | Backend | `https://quoteflow-backend-staging.up.railway.app` |
 | Topology | Pages → same-origin `/api` Function → Railway → private Postgres 18.6 |
