@@ -1,15 +1,15 @@
 # QuoteFlow Deployment
 
-Phase 15 delivered containers. Phase 16 prepares **hosted staging** (Cloudflare Pages + Railway + managed PostgreSQL).
+Phase 15 delivered containers. Phase 16 brought up **hosted staging** (Cloudflare Pages + Railway + managed PostgreSQL). Phase 17 documents production readiness — see [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
 
-**Hosted bring-up status:** see [STAGING_VALIDATION.md](STAGING_VALIDATION.md). Do not treat local Docker as hosted PASS.
+**Do not deploy production from Phase 17.** Hosted bring-up status: [STAGING_VALIDATION.md](STAGING_VALIDATION.md).
 
 ## Target architecture
 
 ```text
 Internet
   → Cloudflare Pages (Angular static, HTTPS)
-  → same-origin /api proxy  OR  api-staging.<domain>
+  → same-origin /api proxy (BACKEND_ORIGIN)  OR  same-site api.<domain>
   → Railway Spring Boot (HTTPS at edge)
   → Managed PostgreSQL (private networking preferred)
 ```
@@ -69,7 +69,7 @@ HIKARI_MAXIMUM_POOL_SIZE=5
 | Build | `npm run build:staging` (production Angular build + staging robots overlay) |
 | Output | `dist/frontend/browser` |
 | SPA | `public/_redirects` → `/* /index.html 200` |
-| API proxy | Pages Function `functions/api/[[path]].ts` → fixed Railway staging origin |
+| API proxy | Pages Function `functions/api/[[path]].ts` → `BACKEND_ORIGIN` (staging default; production must set env) |
 | Headers | `public/_headers` (nosniff, referrer, frame deny, staging `X-Robots-Tag`) |
 
 ### CLI deploy (current)

@@ -1,12 +1,14 @@
 /**
- * Same-origin /api/* reverse proxy to the fixed Railway staging backend.
- * Not an open proxy: target host is compile-time constant only.
+ * Same-origin /api/* reverse proxy to a fixed backend origin.
+ * Not an open proxy: target host comes only from Pages env `BACKEND_ORIGIN`
+ * (or the staging default below). Never from the request URL/query.
  *
  * Preserves method/body/query and auth-relevant headers (Cookie, Authorization,
  * X-XSRF-TOKEN, X-Correlation-Id). Forces private, no-store on responses.
  */
 
-const BACKEND_ORIGIN = 'https://quoteflow-backend-staging.up.railway.app';
+/** Staging default. Production Pages must set BACKEND_ORIGIN to the prod API host. */
+const DEFAULT_BACKEND_ORIGIN = 'https://quoteflow-backend-staging.up.railway.app';
 
 const STRIP_REQUEST_HEADERS = new Set([
 	'host',
@@ -36,6 +38,15 @@ type PagesContext = {
 	env: Record<string, unknown>;
 };
 
+function resolveBackendOrigin(env: Record<string, unknown>): string {
+	const configured = typeof env.BACKEND_ORIGIN === 'string' ? env.BACKEND_ORIGIN.trim() : '';
+	const origin = configured || DEFAULT_BACKEND_ORIGIN;
+	if (!/^https:\/\/[a-z0-9.-]+(?::\d+)?$/i.test(origin)) {
+		throw new Error('BACKEND_ORIGIN must be an https host origin without path');
+	}
+	return origin.replace(/\/$/, '');
+}
+
 export async function onRequest(context: PagesContext): Promise<Response> {
 	const incoming = context.request;
 	const url = new URL(incoming.url);
@@ -44,7 +55,8 @@ export async function onRequest(context: PagesContext): Promise<Response> {
 		return context.next();
 	}
 
-	const targetUrl = `${BACKEND_ORIGIN}${url.pathname}${url.search}`;
+	const backendOrigin = resolveBackendOrigin(context.env);
+	const targetUrl = `${backendOrigin}${url.pathname}${url.search}`;
 	const headers = new Headers();
 	for (const [key, value] of incoming.headers.entries()) {
 		if (STRIP_REQUEST_HEADERS.has(key.toLowerCase())) {

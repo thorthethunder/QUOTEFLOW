@@ -18,6 +18,8 @@
 | Full OWASP ASVS L2 controls | **PHASE 14 BASELINE** — see [SECURITY_TEST_MATRIX.md](SECURITY_TEST_MATRIX.md), [ADR-019](adr/ADR-019-production-security-and-assurance-baseline.md) |
 | Platform billing webhooks | **IMPLEMENTED** (Phase 12) — live Razorpay E2E deferred |
 | Transactional email | **IMPLEMENTED** (Phase 13) — real Resend E2E deferred |
+| Hosted staging security | **PASS** (Phase 16) — see [STAGING_VALIDATION.md](STAGING_VALIDATION.md) |
+| Production launch readiness | **NOT READY** — gates in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) |
 
 ## IMPLEMENTED (Phase 1–3)
 

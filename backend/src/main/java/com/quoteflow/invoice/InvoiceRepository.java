@@ -25,8 +25,6 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
 
 	Optional<Invoice> findBySourceQuotation_IdAndBusiness_Id(UUID sourceQuotationId, UUID businessId);
 
-	Optional<Invoice> findBySourceQuotation_Id(UUID sourceQuotationId);
-
 	@Query("""
 			select i from Invoice i
 			where i.business.id = :businessId

@@ -1,58 +1,110 @@
 # QuoteFlow AI Architecture (FUTURE)
 
-> **Status: FUTURE — not implemented in Phase 1.**  
-> This document describes intended design only. No AI APIs, SDKs, migrations, or agent runtimes are active yet.
+> **Status: NOT IMPLEMENTED.**  
+> Phase 17 documents the roadmap only. Do not add AI SDKs, migrations, or agent runtimes until **AI Phase 1**.
 
 ## Principle
 
-AI is a **platform capability**, not a shortcut into business services.
+AI is an **optional platform capability**. Core SaaS must work when AI is disabled or offline:
 
-Core services (`Customer`, `Quotation`, `Invoice`, `Payment`) must work when AI providers are down. AI reaches business logic only through authorized **tools**.
+- customers, quotations, invoices, payments, PDF, dashboard, billing
 
-## Target flow
+AI must **never** call repositories or the database directly.
+
+```text
+AI Agent
+  → approved Tool
+  → existing Spring business service
+  → authorization + tenant validation + business rules
+  → transaction
+  → database
+```
+
+## Provider abstraction (required design)
+
+```text
+AiProvider
+├── OllamaAiProvider          (local / self-hosted)
+├── ManagedCloudAiProvider    (configurable cloud vendor)
+└── future providers
+```
+
+Application code depends on `AiProvider`, not a vendor SDK.
+
+### Local development
+
+```text
+Angular → Spring Boot → AiProvider → Ollama → local model
+```
+
+Conceptual configuration (do not commit secrets or hardcode a model name):
+
+```text
+AI_ENABLED=true
+AI_PROVIDER=OLLAMA
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=<operator-configured-model>
+```
+
+### Production
+
+```text
+Angular → Spring Boot → AiProvider → configured managed or self-hosted provider
+```
+
+```text
+AI_ENABLED=false|true
+AI_PROVIDER=OLLAMA|MANAGED_CLOUD|...
+AI_API_KEY=                 # backend secret manager only
+AI_MODEL=
+AI_EMBEDDING_MODEL=
+```
+
+Keys never ship to Angular / `config.json`.
+
+## Target runtime flow
 
 ```text
 Angular
-   ↓
-AI API  (FUTURE)
-   ↓
+  ↓
+AI API (FUTURE)
+  ↓
 AI Orchestrator
-   ↓
+  ↓
 Agent Runtime
-   ↓
-Tool Registry
-   ↓
+  ↓
+Tool Registry (allowlisted tools only)
+  ↓
 Business Service
-   ↓
+  ↓
 Authorization / Tenant Isolation
-   ↓
+  ↓
 Database / External Integration
 ```
 
-An **AI Provider** abstraction sits beside the orchestrator (text generation, structured output, embeddings, tool-capable calls). Application code must not depend on a single vendor SDK.
+## Phased roadmap (post–Phase 17)
 
-Conceptual providers (not implemented): OpenAI, Gemini, Anthropic, local models.
+| Phase | Scope |
+|-------|--------|
+| **AI Phase 1** | Provider foundation + **Ollama local support** + feature flag; health isolation |
+| **AI Phase 2** | Quote Assistant (draft text / structured suggestion → DRAFT only) |
+| **AI Phase 3** | Read-only Business Copilot |
+| **AI Phase 4** | Controlled agent tools (allowlisted, authz enforced) |
+| **AI Phase 5** | Payment Reminder Assistant (propose → human approve → send) |
+| **AI Phase 6** | Reporting insights (read-only aggregates) |
+| **AI Phase 7** | Tenant-isolated RAG (prefer PostgreSQL + pgvector first) |
+| **AI Phase 8** | Multi-step agent workflows + human approval |
+| **AI Phase 9** | Usage / cost / entitlements metering |
+| **AI Phase 10** | AI security / red-team (injection, tool misuse, cross-tenant) |
 
-## Capabilities planned later
-
-| Capability | Intent |
-|------------|--------|
-| Provider abstraction | `AiProvider` with secure server-side API keys |
-| Assistant | Conversational UI with persisted conversations/messages |
-| Structured output | Schema-validated JSON before any create/update |
-| Tool calling | Registered tools with auth, tenant checks, validation |
-| RAG | Tenant-aware retrieval; consider PostgreSQL + pgvector first |
-| Agent runtime | Multi-step workflows (e.g. collections) with orchestration |
-| Human approval | Side-effect actions require explicit user confirmation |
-| Usage metering | Tokens/requests/cost per tenant and subscription limits |
-| Auditing | Tool executions, approvals, and agent runs recorded |
+**Ollama local testing support:** PLANNED FOR AI PHASE 1  
+**Production AI provider abstraction:** PLANNED  
+**AI implementation:** NOT STARTED
 
 ## Read vs side-effect actions
 
-- **Read-only** (may auto-run after auth): search customers, list invoices, summarize revenue, draft text.
-- **Side effects** (require human approval): send quotation/invoice/email, delete records, change subscriptions, bulk contact, financial mutations beyond creating a **DRAFT**.
-
-Example: “Send reminders to overdue customers” → agent proposes a summary → user approves → then execute.
+- **Read-only** (may auto-run after auth): search, list, summarize, draft text.
+- **Side effects** (require human approval): send email/quotation/invoice, delete, subscription changes, bulk contact, financial mutations beyond creating a **DRAFT**.
 
 ## Security requirements (FUTURE)
 
@@ -60,20 +112,10 @@ Example: “Send reminders to overdue customers” → agent proposes a summary 
 2. Validate all tool inputs; verify IDs against the tenant.
 3. Never bypass authorization or subscription limits.
 4. Never put secrets in prompts or logs.
-5. Minimize PII/business data sent to external models.
-6. Defend against prompt injection, tool misuse, and cross-tenant leakage.
-7. High-impact actions need approval; activity must be auditable.
-
-## Configuration (FUTURE env vars)
-
-```text
-AI_PROVIDER=
-AI_MODEL=
-AI_API_KEY=
-AI_EMBEDDING_MODEL=
-```
-
-Keys stay on the backend. Never expose to Angular.
+5. Minimize PII sent to external models.
+6. Defend against prompt injection and cross-tenant leakage.
+7. High-impact actions need approval; tool runs must be auditable.
+8. AI outage must not break core SaaS HTTP APIs.
 
 ## Planned entities (not migrated yet)
 
@@ -83,14 +125,6 @@ Do not create AI Flyway migrations until the corresponding AI phase.
 
 ## Incorrect vs correct integration
 
-**Incorrect:** `QuotationService` calling OpenAI/Gemini directly.
+**Incorrect:** `QuotationService` calling a model vendor SDK directly.
 
 **Correct:** Assistant/Agent → `CreateQuotationTool` → `QuotationService` (auth + tenant + validation) → DRAFT only → user confirms before send.
-
-## Cost and failure isolation (FUTURE)
-
-- Meter usage and enforce subscription quotas so AI cannot create uncontrolled bills.
-- AI provider outage must not break quotation/invoice workflows.
-- Prefer streaming/background jobs for long AI operations; keep normal SaaS APIs responsive.
-- Start with **one** provider behind `AiProvider`; add others only when product need justifies cost/complexity.
-

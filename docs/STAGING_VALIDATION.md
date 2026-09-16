@@ -2,6 +2,8 @@
 
 **Status: Phase 16 CLOSED PASS** (hosted staging bring-up complete — not production approval)
 
+Phase 17 production-readiness gates: [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
+
 Final hosted revision (frontend): Cloudflare Pages `quoteflow-staging` @ git `main` after Phase 16 Task 3 commit (see report SHA). Backend Railway staging previously green at `290c4ef` + env CORS update.
 
 | Check | Result | Evidence |

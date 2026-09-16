@@ -6,12 +6,15 @@ Multi-tenant SaaS for freelancers and small service businesses to manage custome
 
 ## Current status
 
-**Phase 1–13 code verified:** foundation through transactional email/notifications (Razorpay Test Mode E2E and real email provider E2E may still be deferred).
+**Phases 1–16: CLOSED PASS** (hosted staging on Cloudflare Pages + Railway).  
+**Phase 17:** production-readiness review — see [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md).  
+**Production launch:** NOT READY until domain/topology, backups, secrets, and provider final gates complete.  
+**AI:** NOT STARTED — roadmap in [docs/AI_ARCHITECTURE.md](docs/AI_ARCHITECTURE.md).
 
 - Monorepo (`frontend/`, `backend/`, `docs/`, `.github/`)
 - Angular auth shell, customers, quotations + PDF + email, invoices + reminders, payments + receipt PDF, dashboard, Plan & usage + checkout; Spring Boot modular monolith + Actuator
 - PostgreSQL + Flyway V1–V10 (subscriptions, platform billing, notification outbox)
-- Tenant-safe document numbering + OpenPDF + entitlements + `BillingProvider` + `EmailProvider` / outbox worker
+- Hosted staging: same-origin `/api` Pages Function → Railway → private Postgres 18
 
 Not implemented yet: tenant invoice Pay Now, AI, refunds, Redis, Kafka, platform-admin UI, Grafana, object storage.
 
@@ -35,8 +38,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/SECURITY.md](docs/SECURI
 |----------|--------------------------------------------|
 | Frontend | Angular 20, TypeScript, Angular Material   |
 | Backend  | Java 21, Spring Boot 4.1, Maven            |
-| Database | PostgreSQL 16 (Docker Compose for local)   |
-| Schema   | Flyway (migrations start in Phase 2)       |
+| Database | PostgreSQL 16 local / 18 staging (Railway) |
+| Schema   | Flyway V1–V10                               |
 
 ## Prerequisites
 

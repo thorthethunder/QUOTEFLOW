@@ -19,12 +19,14 @@
 | Platform billing (Razorpay subscriptions) | **IMPLEMENTED** (Phase 12) — see [BILLING.md](BILLING.md), [ADR-017](adr/ADR-017-platform-billing-and-razorpay-subscriptions.md) |
 | Transactional email / notifications | **IMPLEMENTED** (Phase 13) — see [NOTIFICATIONS.md](NOTIFICATIONS.md), [EMAIL.md](EMAIL.md), [ADR-018](adr/ADR-018-transactional-email-and-notification-outbox.md) |
 | Security hardening / production assurance | **IMPLEMENTED** (Phase 14) — see [SECURITY_TEST_MATRIX.md](SECURITY_TEST_MATRIX.md), [ADR-019](adr/ADR-019-production-security-and-assurance-baseline.md) |
-| Docker / production deployment packaging | **IMPLEMENTED** (Phase 15) — containers + config; cloud bring-up later |
-| Hosted staging (Railway + Cloudflare Pages) | **PREPARED / NOT BROUGHT UP** (Phase 16) — see [STAGING_VALIDATION.md](STAGING_VALIDATION.md) |
+| Docker / production deployment packaging | **IMPLEMENTED** (Phase 15) — containers + config |
+| Hosted staging (Railway + Cloudflare Pages) | **CLOSED PASS** (Phase 16) — see [STAGING_VALIDATION.md](STAGING_VALIDATION.md) |
+| Production readiness / release gates | **CONDITIONAL PASS** (Phase 17) — [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md); launch **NOT READY** |
 | Platform admin / FinOps dashboards | **FUTURE** — documented only |
 | Platform billing vs tenant payments | Separation **enforced** ([ADR-004](adr/ADR-004-platform-billing-vs-tenant-payments.md)); SaaS charges never in `payments` |
 | Grafana / Prometheus stack | **FUTURE** — Actuator only for now |
-| Redis / Kafka / microservices / AI providers | **FUTURE** — do not deploy prematurely |
+| Redis / Kafka / microservices | **FUTURE** — do not deploy prematurely |
+| AI providers (Ollama / managed) | **NOT STARTED** — roadmap [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md) |
 
 **Principle:** Design for scale. Deploy for current scale.
 

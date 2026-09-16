@@ -3,7 +3,8 @@
 ## IMPLEMENTED
 
 - **Phase 15 containers** — [DOCKER.md](DOCKER.md), [DEPLOYMENT.md](DEPLOYMENT.md), [ADR-020](adr/ADR-020-containerization-and-production-configuration.md)
-- **Phase 16 staging prep** — [ENVIRONMENTS.md](ENVIRONMENTS.md), [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md), [STAGING_VALIDATION.md](STAGING_VALIDATION.md), [ADR-021](adr/ADR-021-hosted-staging-environment-and-deployment-workflow.md)
+- **Phase 16 hosted staging** — [ENVIRONMENTS.md](ENVIRONMENTS.md), [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md), [STAGING_VALIDATION.md](STAGING_VALIDATION.md), [ADR-021](adr/ADR-021-hosted-staging-environment-and-deployment-workflow.md)
+- **Phase 17 production readiness** — [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) (launch gates, backup/RPO targets, topology)
 - Spring Boot Actuator with minimal exposure (`/actuator/health`; probes: liveness/readiness in prod)
 - Production profile: `health` only, `show-details: never`
 - **Phase 12 platform billing ops** — see [BILLING.md](BILLING.md) for Razorpay Test/Live setup, webhook endpoint, env vars (`BILLING_ENABLED`, plan IDs, secrets)
