@@ -48,6 +48,10 @@ quoteflow:
     max-attempts: 4
     per-tenant-per-minute: 1000
     per-document-per-minute: 1000
+  ai:
+    enabled: false
+    provider: OLLAMA
+    log-prompts: false
 
 logging:
   level:

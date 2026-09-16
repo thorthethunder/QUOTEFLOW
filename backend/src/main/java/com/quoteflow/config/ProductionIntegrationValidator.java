@@ -1,5 +1,6 @@
 package com.quoteflow.config;
 
+import com.quoteflow.ai.config.AiProperties;
 import com.quoteflow.billing.BillingProperties;
 import com.quoteflow.notification.email.EmailProperties;
 import com.quoteflow.security.SecurityProperties;
@@ -16,7 +17,7 @@ import java.util.Arrays;
 import java.util.Locale;
 
 /**
- * Production fail-closed checks for billing/email providers beyond JWT/CORS.
+ * Production fail-closed checks for billing/email/AI providers beyond JWT/CORS.
  */
 @Component
 @Order(50)
@@ -28,16 +29,19 @@ public class ProductionIntegrationValidator implements ApplicationRunner {
 	private final BillingProperties billingProperties;
 	private final EmailProperties emailProperties;
 	private final SecurityProperties securityProperties;
+	private final AiProperties aiProperties;
 
 	public ProductionIntegrationValidator(
 			Environment environment,
 			BillingProperties billingProperties,
 			EmailProperties emailProperties,
-			SecurityProperties securityProperties) {
+			SecurityProperties securityProperties,
+			AiProperties aiProperties) {
 		this.environment = environment;
 		this.billingProperties = billingProperties;
 		this.emailProperties = emailProperties;
 		this.securityProperties = securityProperties;
+		this.aiProperties = aiProperties;
 	}
 
 	@Override
@@ -50,13 +54,16 @@ public class ProductionIntegrationValidator implements ApplicationRunner {
 
 		validateBilling();
 		validateEmail();
+		validateAi();
 
 		log.info(
-				"startup.config profile=prod port={} billingEnabled={} billingProvider={} emailProvider={} corsOrigins={}",
+				"startup.config profile=prod port={} billingEnabled={} billingProvider={} emailProvider={} aiEnabled={} aiProvider={} corsOrigins={}",
 				environment.getProperty("server.port"),
 				billingProperties.isEnabled(),
 				billingProperties.getProvider(),
 				emailProperties.getProvider(),
+				aiProperties.isEnabled(),
+				aiProperties.getProvider(),
 				securityProperties.getCors().getAllowedOrigins());
 	}
 
@@ -112,6 +119,29 @@ public class ProductionIntegrationValidator implements ApplicationRunner {
 			if (!StringUtils.hasText(emailProperties.getFromEmail())) {
 				throw new IllegalStateException("EMAIL_PROVIDER=RESEND requires EMAIL_FROM");
 			}
+		}
+	}
+
+	private void validateAi() {
+		if (!aiProperties.isEnabled()) {
+			log.info("ai.enabled=false — Ollama/cloud AI not required");
+			return;
+		}
+		String provider = aiProperties.getProvider() == null
+				? ""
+				: aiProperties.getProvider().trim().toUpperCase(Locale.ROOT);
+		if (!"OLLAMA".equals(provider)) {
+			throw new IllegalStateException(
+					"Production AI_ENABLED=true currently supports only AI_PROVIDER=OLLAMA");
+		}
+		if (!StringUtils.hasText(aiProperties.getOllama().getBaseUrl())) {
+			throw new IllegalStateException("AI_ENABLED=true requires OLLAMA_BASE_URL");
+		}
+		if (!StringUtils.hasText(aiProperties.getOllama().getModel())) {
+			throw new IllegalStateException("AI_ENABLED=true requires OLLAMA_MODEL");
+		}
+		if (aiProperties.isLogPrompts()) {
+			throw new IllegalStateException("Production forbids AI_LOG_PROMPTS=true");
 		}
 	}
 }

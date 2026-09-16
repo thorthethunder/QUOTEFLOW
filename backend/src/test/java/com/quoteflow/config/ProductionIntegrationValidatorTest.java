@@ -1,5 +1,6 @@
 package com.quoteflow.config;
 
+import com.quoteflow.ai.config.AiProperties;
 import com.quoteflow.billing.BillingProperties;
 import com.quoteflow.notification.email.EmailProperties;
 import com.quoteflow.security.SecurityProperties;
@@ -92,6 +93,31 @@ class ProductionIntegrationValidatorTest {
 		assertThatCode(() -> validator.run(null)).doesNotThrowAnyException();
 	}
 
+	@Test
+	void acceptsAiDisabledInProdWithoutOllama() {
+		BillingProperties billing = new BillingProperties();
+		billing.setEnabled(false);
+		ProductionIntegrationValidator validator = validator(
+				prodEnv(), billing, emailResendReady(), corsReady(), aiDisabled());
+		assertThatCode(() -> validator.run(null)).doesNotThrowAnyException();
+	}
+
+	@Test
+	void rejectsAiEnabledInProdWithoutOllamaUrl() {
+		AiProperties ai = new AiProperties();
+		ai.setEnabled(true);
+		ai.setProvider("OLLAMA");
+		ai.getOllama().setBaseUrl("");
+		ai.getOllama().setModel("qwen3:8b");
+		BillingProperties billing = new BillingProperties();
+		billing.setEnabled(false);
+		ProductionIntegrationValidator validator = validator(
+				prodEnv(), billing, emailResendReady(), corsReady(), ai);
+		assertThatThrownBy(() -> validator.run(null))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("OLLAMA_BASE_URL");
+	}
+
 	private static MockEnvironment prodEnv() {
 		MockEnvironment env = new MockEnvironment();
 		env.setActiveProfiles("prod");
@@ -113,11 +139,26 @@ class ProductionIntegrationValidatorTest {
 		return security;
 	}
 
+	private static AiProperties aiDisabled() {
+		AiProperties ai = new AiProperties();
+		ai.setEnabled(false);
+		return ai;
+	}
+
 	private static ProductionIntegrationValidator validator(
 			Environment env,
 			BillingProperties billing,
 			EmailProperties email,
 			SecurityProperties security) {
-		return new ProductionIntegrationValidator(env, billing, email, security);
+		return validator(env, billing, email, security, aiDisabled());
+	}
+
+	private static ProductionIntegrationValidator validator(
+			Environment env,
+			BillingProperties billing,
+			EmailProperties email,
+			SecurityProperties security,
+			AiProperties ai) {
+		return new ProductionIntegrationValidator(env, billing, email, security, ai);
 	}
 }

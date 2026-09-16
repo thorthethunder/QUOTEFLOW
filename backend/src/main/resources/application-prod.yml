@@ -84,6 +84,16 @@ quoteflow:
     claim-lease: ${EMAIL_CLAIM_LEASE:10m}
     resend:
       api-key: ${RESEND_API_KEY:}
+  ai:
+    # Production default remains disabled. Enabling requires explicit operator config.
+    enabled: ${AI_ENABLED:false}
+    provider: ${AI_PROVIDER:OLLAMA}
+    log-prompts: false
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:}
+      model: ${OLLAMA_MODEL:}
+      connect-timeout: ${OLLAMA_CONNECT_TIMEOUT:5s}
+      read-timeout: ${OLLAMA_READ_TIMEOUT:120s}
 
 springdoc:
   api-docs:

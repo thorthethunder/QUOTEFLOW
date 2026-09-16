@@ -26,7 +26,7 @@
 | Platform billing vs tenant payments | Separation **enforced** ([ADR-004](adr/ADR-004-platform-billing-vs-tenant-payments.md)); SaaS charges never in `payments` |
 | Grafana / Prometheus stack | **FUTURE** — Actuator only for now |
 | Redis / Kafka / microservices | **FUTURE** — do not deploy prematurely |
-| AI providers (Ollama / managed) | **NOT STARTED** — roadmap [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md) |
+| AI providers (Ollama local) | **AI Phase 1** — foundation; assistants NOT STARTED — [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md), [AI_LOCAL_DEVELOPMENT.md](AI_LOCAL_DEVELOPMENT.md) |
 
 **Principle:** Design for scale. Deploy for current scale.
 

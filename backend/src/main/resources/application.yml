@@ -102,6 +102,17 @@ quoteflow:
       api-base-url: ${RESEND_API_BASE_URL:https://api.resend.com}
       connect-timeout: ${RESEND_CONNECT_TIMEOUT:5s}
       read-timeout: ${RESEND_READ_TIMEOUT:15s}
+  ai:
+    # Optional subsystem. Default false — Ollama not required for core SaaS.
+    enabled: ${AI_ENABLED:false}
+    provider: ${AI_PROVIDER:OLLAMA}
+    log-prompts: ${AI_LOG_PROMPTS:false}
+    max-response-chars: ${AI_MAX_RESPONSE_CHARS:256000}
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      model: ${OLLAMA_MODEL:qwen3:8b}
+      connect-timeout: ${OLLAMA_CONNECT_TIMEOUT:5s}
+      read-timeout: ${OLLAMA_READ_TIMEOUT:120s}
 
 springdoc:
   api-docs:

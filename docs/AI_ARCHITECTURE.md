@@ -1,18 +1,21 @@
-# QuoteFlow AI Architecture (FUTURE)
+# QuoteFlow AI Architecture
 
-> **Status: NOT IMPLEMENTED.**  
-> Phase 17 documents the roadmap only. Do not add AI SDKs, migrations, or agent runtimes until **AI Phase 1**.
+> **Status: AI Phase 1 IMPLEMENTED** — provider foundation + Ollama.  
+> User-facing assistants / agents / RAG: **not started** (AI Phase 2+).
 
 ## Principle
 
-AI is an **optional platform capability**. Core SaaS must work when AI is disabled or offline:
+AI is an **optional platform capability**. Core SaaS must work when:
 
-- customers, quotations, invoices, payments, PDF, dashboard, billing
+- `AI_ENABLED=false`, or
+- Ollama (or any provider) is offline
+
+Must not break: auth, customers, quotations, invoices, payments, PDF, dashboard, billing, notifications.
 
 AI must **never** call repositories or the database directly.
 
 ```text
-AI Agent
+AI Agent (future)
   → approved Tool
   → existing Spring business service
   → authorization + tenant validation + business rules
@@ -20,111 +23,102 @@ AI Agent
   → database
 ```
 
-## Provider abstraction (required design)
+## Provider abstraction (Phase 1)
 
 ```text
 AiProvider
-├── OllamaAiProvider          (local / self-hosted)
-├── ManagedCloudAiProvider    (configurable cloud vendor)
-└── future providers
+├── DisabledAiProvider     (AI_ENABLED=false)
+├── OllamaAiProvider       (AI_ENABLED=true, AI_PROVIDER=OLLAMA)
+└── future: managed cloud / self-hosted providers
 ```
 
-Application code depends on `AiProvider`, not a vendor SDK.
+Package: `com.quoteflow.ai` — explicit QuoteFlow-owned code (no LangChain / Spring AI in Phase 1).
+
+Local development guide: [AI_LOCAL_DEVELOPMENT.md](AI_LOCAL_DEVELOPMENT.md).
 
 ### Local development
 
 ```text
-Angular → Spring Boot → AiProvider → Ollama → local model
+Angular → Spring Boot → AiProvider → Ollama → qwen3:8b (configured)
 ```
-
-Conceptual configuration (do not commit secrets or hardcode a model name):
 
 ```text
 AI_ENABLED=true
 AI_PROVIDER=OLLAMA
 OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=<operator-configured-model>
+OLLAMA_MODEL=qwen3:8b
 ```
+
+Lower-resource **manual** fallback: `OLLAMA_MODEL=qwen3:4b` (never silent).
 
 ### Production
 
 ```text
-Angular → Spring Boot → AiProvider → configured managed or self-hosted provider
+AI_ENABLED=false          # default — required until operator enables AI
+AI_PROVIDER=OLLAMA        # only implemented provider today
+OLLAMA_BASE_URL=          # required only when AI enabled
+OLLAMA_MODEL=
 ```
+
+Keys for future managed providers: backend secret manager only — never Angular / `config.json`.
+
+## Financial safety
+
+**AI totals are not authoritative.**  
+Authoritative money: `FinancialDocumentCalculator` / `PaymentSummaryCalculator`.
+
+Future Quote Assistant flow:
 
 ```text
-AI_ENABLED=false|true
-AI_PROVIDER=OLLAMA|MANAGED_CLOUD|...
-AI_API_KEY=                 # backend secret manager only
-AI_MODEL=
-AI_EMBEDDING_MODEL=
+NL → model → proposed structured draft → validation → FinancialDocumentCalculator → user confirm → QuotationService
 ```
 
-Keys never ship to Angular / `config.json`.
+## Structured output
 
-## Target runtime flow
+`generateStructured` uses Ollama `format` JSON Schema when available, then `StructuredOutputValidator` (size, JSON, Jakarta Validation). Demo type: `QuotationDraftProposal` (not persisted).
 
-```text
-Angular
-  ↓
-AI API (FUTURE)
-  ↓
-AI Orchestrator
-  ↓
-Agent Runtime
-  ↓
-Tool Registry (allowlisted tools only)
-  ↓
-Business Service
-  ↓
-Authorization / Tenant Isolation
-  ↓
-Database / External Integration
-```
+## Telemetry
 
-## Phased roadmap (post–Phase 17)
+`AiUsageRecorder` logs provider/model/feature/latency/tokens/success — not prompts or PII payloads.
 
-| Phase | Scope |
-|-------|--------|
-| **AI Phase 1** | Provider foundation + **Ollama local support** + feature flag; health isolation |
-| **AI Phase 2** | Quote Assistant (draft text / structured suggestion → DRAFT only) |
-| **AI Phase 3** | Read-only Business Copilot |
-| **AI Phase 4** | Controlled agent tools (allowlisted, authz enforced) |
-| **AI Phase 5** | Payment Reminder Assistant (propose → human approve → send) |
-| **AI Phase 6** | Reporting insights (read-only aggregates) |
-| **AI Phase 7** | Tenant-isolated RAG (prefer PostgreSQL + pgvector first) |
-| **AI Phase 8** | Multi-step agent workflows + human approval |
-| **AI Phase 9** | Usage / cost / entitlements metering |
-| **AI Phase 10** | AI security / red-team (injection, tool misuse, cross-tenant) |
+Local Ollama: provider API monetary cost is typically zero; **compute/infrastructure cost is not zero**.
 
-**Ollama local testing support:** PLANNED FOR AI PHASE 1  
-**Production AI provider abstraction:** PLANNED  
-**AI implementation:** NOT STARTED
+## Health
 
-## Read vs side-effect actions
+`AiHealthIndicator` always contributes **UP** with `aiAvailable` detail so provider outage cannot mark the app unhealthy. Readiness group remains DB-centric.
 
-- **Read-only** (may auto-run after auth): search, list, summarize, draft text.
-- **Side effects** (require human approval): send email/quotation/invoice, delete, subscription changes, bulk contact, financial mutations beyond creating a **DRAFT**.
+## Security (Phase 1 + future)
 
-## Security requirements (FUTURE)
+1. Model output is untrusted.
+2. No SSRF: base URL never from client payloads.
+3. Bounded response size and timeouts; no blind generation retries.
+4. No prompt logging by default (`AI_LOG_PROMPTS` forbidden in prod).
+5. Future tools: allowlist + schema + authz + tenant checks (never free-form backend ops from model text).
+6. Prompt injection defense expands in AI Phase 10.
 
-1. AI output is untrusted input.
-2. Validate all tool inputs; verify IDs against the tenant.
-3. Never bypass authorization or subscription limits.
-4. Never put secrets in prompts or logs.
-5. Minimize PII sent to external models.
-6. Defend against prompt injection and cross-tenant leakage.
-7. High-impact actions need approval; tool runs must be auditable.
-8. AI outage must not break core SaaS HTTP APIs.
+## Phased roadmap
 
-## Planned entities (not migrated yet)
+| Phase | Scope | Status |
+|-------|--------|--------|
+| **AI Phase 1** | Provider foundation + Ollama + qwen3:8b local | **THIS PHASE** |
+| **AI Phase 2** | Quote Assistant | NEXT |
+| **AI Phase 3** | Read-only Business Copilot | Planned |
+| **AI Phase 4** | Controlled agent tools | Planned |
+| **AI Phase 5** | Payment Reminder Assistant | Planned |
+| **AI Phase 6** | Reporting insights | Planned |
+| **AI Phase 7** | Tenant-isolated RAG | Planned |
+| **AI Phase 8** | Agent workflows + human approval | Planned |
+| **AI Phase 9** | Usage / cost / entitlements | Planned |
+| **AI Phase 10** | AI security / red-team | Planned |
 
-`AiConversation`, `AiMessage`, `AiAgentRun`, `AiToolExecution`, `AiUsageRecord`, `AiApprovalRequest`, `AiKnowledgeDocument`, `AiEmbeddingReference`
+## Evaluation foundation (expand in Phase 2)
 
-Do not create AI Flyway migrations until the corresponding AI phase.
+Categories to score providers/models later: simple EN quotes, messy WhatsApp-style text, missing qty/price, multi-service, discount/tax asks, long/ambiguous units, Tamil / mixed language, typos, malicious instructions, prompt injection, huge input, invalid money formats, invalid JSON.
 
-## Incorrect vs correct integration
+Production model decision must use QuoteFlow benchmarks (accuracy, latency, RAM/VRAM, cost, privacy, ops) — not generic leaderboards alone. Strategies: managed API, dedicated Ollama/self-hosted, or hybrid.
 
-**Incorrect:** `QuotationService` calling a model vendor SDK directly.
+## Incorrect vs correct
 
-**Correct:** Assistant/Agent → `CreateQuotationTool` → `QuotationService` (auth + tenant + validation) → DRAFT only → user confirms before send.
+**Incorrect:** `QuotationService` calling a vendor SDK; AI writing totals; AI choosing tenant.
+
+**Correct:** Assistant → Tool → `QuotationService` (auth + tenant + validation) → DRAFT → user confirms.
