@@ -37,10 +37,12 @@ public class QuoteAssistantController {
 		boolean enabled = aiProperties.isEnabled();
 		boolean springAi = "spring-ai".equalsIgnoreCase(
 				aiProperties.getAdapter() == null ? "" : aiProperties.getAdapter().trim());
+		boolean actions = enabled && aiProperties.getActions().isEnabled() && springAi;
 		return new AiCapabilitiesResponse(
 				enabled,
 				enabled,
 				enabled && springAi,
+				actions,
 				enabled ? aiProvider.providerName() : "DISABLED",
 				enabled ? aiProvider.model() : "");
 	}

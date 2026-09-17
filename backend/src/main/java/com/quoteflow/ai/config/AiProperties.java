@@ -32,6 +32,7 @@ public class AiProperties {
 	private final Ollama ollama = new Ollama();
 	private final QuoteAssistant quoteAssistant = new QuoteAssistant();
 	private final BusinessCopilot businessCopilot = new BusinessCopilot();
+	private final Actions actions = new Actions();
 
 	public boolean isEnabled() {
 		return enabled;
@@ -89,6 +90,64 @@ public class AiProperties {
 
 	public BusinessCopilot getBusinessCopilot() {
 		return businessCopilot;
+	}
+
+	public Actions getActions() {
+		return actions;
+	}
+
+	public static class Actions {
+		public static final Duration HARD_MAX_APPROVAL_TTL = Duration.ofHours(1);
+		public static final int HARD_MAX_ITEMS = 50;
+		public static final int HARD_MAX_PAYLOAD_CHARS = 64_000;
+
+		/** Master switch for AI-assisted actions. Default false. */
+		private boolean enabled = false;
+		private Duration approvalTtl = Duration.ofMinutes(10);
+		private int perUserPerMinute = 6;
+		private int perTenantPerMinute = 20;
+
+		public boolean isEnabled() {
+			return enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+		public Duration getApprovalTtl() {
+			return approvalTtl;
+		}
+
+		public void setApprovalTtl(Duration approvalTtl) {
+			if (approvalTtl == null || approvalTtl.isNegative() || approvalTtl.isZero()) {
+				this.approvalTtl = Duration.ofMinutes(10);
+				return;
+			}
+			if (approvalTtl.compareTo(HARD_MAX_APPROVAL_TTL) > 0) {
+				this.approvalTtl = HARD_MAX_APPROVAL_TTL;
+			} else if (approvalTtl.compareTo(Duration.ofMinutes(1)) < 0) {
+				this.approvalTtl = Duration.ofMinutes(1);
+			} else {
+				this.approvalTtl = approvalTtl;
+			}
+		}
+
+		public int getPerUserPerMinute() {
+			return perUserPerMinute;
+		}
+
+		public void setPerUserPerMinute(int perUserPerMinute) {
+			this.perUserPerMinute = Math.max(1, perUserPerMinute);
+		}
+
+		public int getPerTenantPerMinute() {
+			return perTenantPerMinute;
+		}
+
+		public void setPerTenantPerMinute(int perTenantPerMinute) {
+			this.perTenantPerMinute = Math.max(1, perTenantPerMinute);
+		}
 	}
 
 	public static class BusinessCopilot {

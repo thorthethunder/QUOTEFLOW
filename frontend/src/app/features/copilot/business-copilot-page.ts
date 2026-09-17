@@ -7,7 +7,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ActionApprovalPanelComponent } from './action-approval-panel';
 import {
+  ActionProposalSummary,
   BusinessCopilotApiService,
   BusinessCopilotReference,
   BusinessCopilotResponse,
@@ -23,6 +25,7 @@ import {
     MatInputModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    ActionApprovalPanelComponent,
   ],
   templateUrl: './business-copilot-page.html',
   styleUrl: './business-copilot-page.scss',
@@ -31,10 +34,12 @@ export class BusinessCopilotPageComponent implements OnInit {
   private readonly api = inject(BusinessCopilotApiService);
 
   readonly available = signal(false);
+  readonly actionsEnabled = signal(false);
   readonly loadingCaps = signal(true);
   readonly asking = signal(false);
   readonly error = signal<string | null>(null);
   readonly result = signal<BusinessCopilotResponse | null>(null);
+  readonly activeProposal = signal<ActionProposalSummary | null>(null);
 
   readonly examples = [
     "Who hasn't paid me yet?",
@@ -52,10 +57,12 @@ export class BusinessCopilotPageComponent implements OnInit {
     this.api.capabilities().subscribe({
       next: (caps) => {
         this.available.set(!!caps.businessCopilot);
+        this.actionsEnabled.set(!!caps.aiActions);
         this.loadingCaps.set(false);
       },
       error: () => {
         this.available.set(false);
+        this.actionsEnabled.set(false);
         this.loadingCaps.set(false);
       },
     });
@@ -77,9 +84,11 @@ export class BusinessCopilotPageComponent implements OnInit {
     this.asking.set(true);
     this.error.set(null);
     this.result.set(null);
+    this.activeProposal.set(null);
     this.api.ask(text).subscribe({
       next: (res) => {
         this.result.set(res);
+        this.activeProposal.set(res.actionProposal ?? null);
         this.asking.set(false);
       },
       error: (err: HttpErrorResponse) => {
@@ -87,6 +96,10 @@ export class BusinessCopilotPageComponent implements OnInit {
         this.error.set(this.mapError(err));
       },
     });
+  }
+
+  clearProposal(): void {
+    this.activeProposal.set(null);
   }
 
   routeFor(ref: BusinessCopilotReference): string | null {

@@ -22,6 +22,7 @@
 | Production launch readiness | **NOT READY** — gates in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) |
 | AI Quote Assistant | **IMPLEMENTED** (AI Phase 2) — [QUOTE_ASSISTANT.md](QUOTE_ASSISTANT.md); AI_ENABLED=false by default |
 | AI Business Copilot | **IMPLEMENTED** (AI Phase 3) — read-only tools; [BUSINESS_COPILOT.md](BUSINESS_COPILOT.md) |
+| AI controlled actions | **IMPLEMENTED** (AI Phase 4) — proposal → human confirm; [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md); AI_ACTIONS_ENABLED=false by default |
 
 ## IMPLEMENTED (Phase 1–3)
 
@@ -140,7 +141,9 @@ AI Tool → Spring Business Service → Authentication / Authorization / Tenant 
          → Validation / Business rules / Transaction → Database
 ```
 
-Never: AI Tool → Repository. High-impact actions (email send, void, delete, billing) require human approval. See [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md) and ADR-019.
+Never: AI Tool → Repository. High-impact actions (email send, void, delete, billing) require human approval.
+Phase 4 implements prepare → review → confirm for draft quotation/invoice and reminder prepare (no send).
+See [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md), [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md) and ADR-019.
 
 ### Future AI threat register (document only)
 

@@ -9,14 +9,14 @@ Multi-tenant SaaS for freelancers and small service businesses to manage custome
 **Phases 1–16: CLOSED PASS** (hosted staging on Cloudflare Pages + Railway).  
 **Phase 17:** production-readiness review — see [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md).  
 **Production launch:** NOT READY until domain/topology, backups, secrets, and provider final gates complete.  
-**AI:** Phase 3 Business Copilot (read-only tools) + Quote Assistant — [docs/BUSINESS_COPILOT.md](docs/BUSINESS_COPILOT.md), [docs/AI_LOCAL_DEVELOPMENT.md](docs/AI_LOCAL_DEVELOPMENT.md) (`AI_ENABLED=false` by default).
+**AI:** Phase 4 controlled actions + human approval (proposal → confirm → execute) + Phase 3 Business Copilot + Quote Assistant — [docs/AI_ACTION_APPROVALS.md](docs/AI_ACTION_APPROVALS.md), [docs/BUSINESS_COPILOT.md](docs/BUSINESS_COPILOT.md) (`AI_ENABLED=false`, `AI_ACTIONS_ENABLED=false` by default).
 
 - Monorepo (`frontend/`, `backend/`, `docs/`, `.github/`)
 - Angular auth shell, customers, quotations + PDF + email, invoices + reminders, payments + receipt PDF, dashboard, Plan & usage + checkout; Spring Boot modular monolith + Actuator
-- PostgreSQL + Flyway V1–V10 (subscriptions, platform billing, notification outbox)
+- PostgreSQL + Flyway V1–V11 (subscriptions, platform billing, notification outbox, AI action proposals)
 - Hosted staging: same-origin `/api` Pages Function → Railway → private Postgres 18
 
-Not implemented yet: tenant invoice Pay Now, Business Copilot, refunds, Redis, Kafka, platform-admin UI, Grafana, object storage.
+Not implemented yet: tenant invoice Pay Now, refunds, Redis, Kafka, platform-admin UI, Grafana, object storage. Production AI deployment not started.
 
 ## Architecture (high level)
 

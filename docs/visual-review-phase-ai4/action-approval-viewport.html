@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QuoteFlow Action Approval — viewport fixture</title>
+  <style>
+    :root {
+      --qf-space-2: 0.5rem;
+      --qf-space-3: 0.75rem;
+      --qf-space-4: 1rem;
+      --qf-border-subtle: #d8dde6;
+      --qf-radius-md: 8px;
+      --qf-surface: #fff;
+      --qf-surface-muted: #f4f6f9;
+      --qf-text-muted: #5b6573;
+      --qf-ink: #1a1f2c;
+      --qf-danger: #b42318;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #eef1f6;
+      color: var(--qf-ink);
+      padding: 12px;
+    }
+    .approval {
+      display: flex;
+      flex-direction: column;
+      gap: var(--qf-space-3);
+      padding: var(--qf-space-4);
+      border: 1px solid var(--qf-border-subtle);
+      border-radius: var(--qf-radius-md);
+      background: var(--qf-surface);
+      max-width: min(40rem, 100%);
+    }
+    .eyebrow { margin: 0; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--qf-text-muted); }
+    .approval h2 { margin: 0.25rem 0 0; font-size: 1.125rem; }
+    .meta { margin: 0.35rem 0 0; font-size: 0.8125rem; color: var(--qf-text-muted); }
+    .payload { display: flex; flex-direction: column; gap: var(--qf-space-2); }
+    .row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--qf-space-2); min-height: 2rem; }
+    .row span { color: var(--qf-text-muted); font-size: 0.875rem; }
+    .row.total strong { font-size: 1.05rem; }
+    .items { margin: 0; padding-left: 1.1rem; }
+    .totals { margin-top: var(--qf-space-2); padding-top: var(--qf-space-2); border-top: 1px solid var(--qf-border-subtle); }
+    .note { margin: 0; font-size: 0.8125rem; color: var(--qf-text-muted); }
+    .actions { display: flex; flex-direction: column; gap: var(--qf-space-2); }
+    .confirm, .cancel { min-height: 44px; width: 100%; border-radius: 6px; border: 1px solid var(--qf-border-subtle); font: inherit; }
+    .confirm { background: #1a56db; color: #fff; border-color: #1a56db; }
+    .cancel { background: #fff; }
+    @media (min-width: 768px) {
+      .actions { flex-direction: row; flex-wrap: wrap; }
+      .confirm, .cancel { width: auto; min-width: 11rem; }
+    }
+  </style>
+</head>
+<body>
+  <section class="approval" aria-labelledby="approval-title">
+    <header>
+      <p class="eyebrow">Review required</p>
+      <h2 id="approval-title">Create draft quotation for Raj Electrical</h2>
+      <p class="meta">Action: QUOTATION_CREATE_DRAFT · Expires: Sep 17, 2026, 6:40:00 AM</p>
+    </header>
+    <div class="payload">
+      <div class="row"><span>Customer</span><strong>Raj Electrical</strong></div>
+      <div class="row"><span>Currency</span><strong>INR</strong></div>
+      <h3>Items</h3>
+      <ul class="items">
+        <li>Fans · qty 2 · INR 3000</li>
+      </ul>
+      <div class="totals" aria-label="Authoritative totals">
+        <div class="row"><span>Subtotal</span><strong>INR 6000.00</strong></div>
+        <div class="row"><span>Discount</span><strong>INR 0.00</strong></div>
+        <div class="row"><span>Tax</span><strong>INR 0.00</strong></div>
+        <div class="row total"><span>Total</span><strong>INR 6000.00</strong></div>
+      </div>
+      <p class="note">Confirmation creates a draft only. Numbers are calculator-authoritative.</p>
+    </div>
+    <div class="actions">
+      <button class="confirm" type="button">Create Draft Quotation</button>
+      <button class="cancel" type="button">Cancel</button>
+    </div>
+  </section>
+</body>
+</html>

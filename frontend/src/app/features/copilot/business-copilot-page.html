@@ -2,7 +2,13 @@
   <header class="page-header">
     <h1 id="copilot-title">Business Copilot</h1>
     <p class="subtitle">Ask about your customers, quotations, invoices and payments.</p>
-    <p class="read-only-note">Read-only for now — Copilot checks your data but does not create, send, or change records.</p>
+    @if (actionsEnabled()) {
+      <p class="read-only-note">
+        Draft create and reminder prepare require your explicit review and confirmation. Nothing is saved or emailed automatically.
+      </p>
+    } @else {
+      <p class="read-only-note">Read-only for now — Copilot checks your data but does not create, send, or change records.</p>
+    }
   </header>
 
   @if (loadingCaps()) {
@@ -79,6 +85,14 @@
           </ul>
         }
       </article>
+    }
+
+    @if (activeProposal(); as proposal) {
+      <app-action-approval-panel
+        [summary]="proposal"
+        (closed)="clearProposal()"
+        (confirmed)="clearProposal()"
+      />
     }
   }
 </section>

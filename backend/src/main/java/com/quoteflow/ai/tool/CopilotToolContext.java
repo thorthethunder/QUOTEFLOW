@@ -1,5 +1,6 @@
 package com.quoteflow.ai.tool;
 
+import com.quoteflow.ai.action.dto.ActionProposalSummaryDto;
 import com.quoteflow.ai.copilot.dto.BusinessCopilotReference;
 import com.quoteflow.security.AuthenticatedUser;
 
@@ -10,9 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Immutable trusted execution context for Copilot tool calls.
+ * Trusted execution context for Copilot tool calls.
  * Tenant identity comes from authentication — never from model arguments.
  */
 public final class CopilotToolContext {
@@ -23,6 +25,7 @@ public final class CopilotToolContext {
 	private final AtomicInteger toolCallCount = new AtomicInteger(0);
 	private final int maxToolCalls;
 	private final Map<String, BusinessCopilotReference> references = new LinkedHashMap<>();
+	private final AtomicReference<ActionProposalSummaryDto> actionProposal = new AtomicReference<>();
 
 	public CopilotToolContext(AuthenticatedUser principal, int maxToolCalls) {
 		this.principal = Objects.requireNonNull(principal, "principal");
@@ -64,5 +67,13 @@ public final class CopilotToolContext {
 		synchronized (references) {
 			return Collections.unmodifiableList(new ArrayList<>(references.values()));
 		}
+	}
+
+	public void setActionProposal(ActionProposalSummaryDto proposal) {
+		actionProposal.set(proposal);
+	}
+
+	public ActionProposalSummaryDto actionProposal() {
+		return actionProposal.get();
 	}
 }

@@ -1,0 +1,139 @@
+.approval {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qf-space-3);
+  padding: var(--qf-space-4);
+  border: 1px solid var(--qf-border-subtle);
+  border-radius: var(--qf-radius-md);
+  background: var(--qf-surface);
+  max-width: min(40rem, 100%);
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--qf-text-muted);
+}
+
+.approval h2 {
+  margin: 0.25rem 0 0;
+  font-size: 1.125rem;
+  color: var(--qf-ink);
+}
+
+.meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--qf-text-muted);
+}
+
+.state {
+  display: flex;
+  align-items: center;
+  gap: var(--qf-space-2);
+  color: var(--qf-text-muted);
+}
+
+.payload {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qf-space-2);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--qf-space-2);
+  min-height: 2rem;
+}
+
+.row span {
+  color: var(--qf-text-muted);
+  font-size: 0.875rem;
+}
+
+.row.total strong {
+  font-size: 1.05rem;
+}
+
+.block pre {
+  margin: 0.35rem 0 0;
+  padding: var(--qf-space-3);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--qf-surface-muted);
+  border-radius: var(--qf-radius-md);
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.items {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--qf-ink);
+}
+
+.totals {
+  margin-top: var(--qf-space-2);
+  padding-top: var(--qf-space-2);
+  border-top: 1px solid var(--qf-border-subtle);
+}
+
+.note {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--qf-text-muted);
+}
+
+.banner {
+  padding: var(--qf-space-3);
+  border-radius: var(--qf-radius-md);
+  border: 1px solid var(--qf-border-subtle);
+  background: var(--qf-surface-muted);
+}
+
+.banner.error {
+  border-color: color-mix(in srgb, var(--qf-danger, #b42318) 35%, var(--qf-border-subtle));
+}
+
+.banner.ok {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qf-space-2);
+  align-items: flex-start;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qf-space-2);
+}
+
+.confirm,
+.cancel {
+  min-height: 44px;
+  width: 100%;
+}
+
+.confirm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .confirm,
+  .cancel {
+    width: auto;
+    min-width: 11rem;
+  }
+}

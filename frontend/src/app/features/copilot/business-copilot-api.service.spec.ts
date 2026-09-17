@@ -26,6 +26,7 @@ describe('BusinessCopilotApiService', () => {
       enabled: true,
       quoteAssistant: true,
       businessCopilot: true,
+      aiActions: false,
       provider: 'OLLAMA',
       model: 'qwen3:8b',
     });
@@ -43,6 +44,7 @@ describe('BusinessCopilotApiService', () => {
       answer: 'You have 1 unpaid invoice.',
       references: [{ type: 'INVOICE', id: '11111111-1111-1111-1111-111111111111', displayNumber: 'INV-0015', label: 'INV-0015' }],
       warnings: [],
+      actionProposal: null,
     });
   });
 });

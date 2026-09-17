@@ -27,6 +27,7 @@ describe('BusinessCopilotPageComponent', () => {
       enabled,
       quoteAssistant: enabled,
       businessCopilot: enabled,
+      aiActions: false,
       provider: enabled ? 'OLLAMA' : 'DISABLED',
       model: enabled ? 'qwen3:8b' : '',
     });
@@ -63,6 +64,7 @@ describe('BusinessCopilotPageComponent', () => {
         },
       ],
       warnings: [],
+      actionProposal: null,
     });
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Raj Electrical owes INR 1000.');
@@ -71,6 +73,44 @@ describe('BusinessCopilotPageComponent', () => {
     expect(view.attributes['href'] || view.nativeElement.getAttribute('href')).toContain(
       '/app/invoices/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
     );
+  });
+
+  it('shows approval panel when action proposal returned', () => {
+    flushCaps(true);
+    fixture.componentInstance.message.setValue('Create a draft quotation');
+    fixture.componentInstance.ask();
+    fixture.detectChanges();
+    http.expectOne((r) => r.url.endsWith('/ai/copilot/ask')).flush({
+      answer: 'I prepared a draft for your review.',
+      references: [],
+      warnings: ['Review required before anything is saved or sent.'],
+      actionProposal: {
+        proposalId: '11111111-1111-1111-1111-111111111111',
+        actionType: 'QUOTATION_CREATE_DRAFT',
+        status: 'PENDING',
+        summary: 'Create draft quotation for Raj Electrical',
+        expiresAt: new Date(Date.now() + 600_000).toISOString(),
+        confirmButtonLabel: 'Create Draft Quotation',
+      },
+    });
+    fixture.detectChanges();
+    const detailReq = http.expectOne((r) => r.url.includes('/ai/actions/'));
+    detailReq.flush({
+      proposalId: '11111111-1111-1111-1111-111111111111',
+      actionType: 'QUOTATION_CREATE_DRAFT',
+      status: 'PENDING',
+      summary: 'Create draft quotation for Raj Electrical',
+      expiresAt: new Date(Date.now() + 600_000).toISOString(),
+      confirmButtonLabel: 'Create Draft Quotation',
+      createdAt: new Date().toISOString(),
+      payload: { customerDisplayName: 'Raj Electrical', currency: 'INR', items: [] },
+      preview: { currency: 'INR', total: 0, subtotal: 0, discountAmount: 0, taxAmount: 0 },
+      resultReferenceType: null,
+      resultReferenceId: null,
+    });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Review required');
+    expect(fixture.nativeElement.textContent).toContain('Create Draft Quotation');
   });
 
   it('renders answer as text only (no HTML execution)', () => {

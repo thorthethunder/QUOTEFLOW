@@ -105,7 +105,8 @@ class BusinessCopilotIntegrationTest extends PostgresIntegrationTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.enabled").value(false))
 				.andExpect(jsonPath("$.quoteAssistant").value(false))
-				.andExpect(jsonPath("$.businessCopilot").value(false));
+				.andExpect(jsonPath("$.businessCopilot").value(false))
+				.andExpect(jsonPath("$.aiActions").value(false));
 	}
 
 	@Test

@@ -125,6 +125,12 @@ quoteflow:
       per-user-per-minute: ${AI_COPILOT_RATE_USER:6}
       per-tenant-per-minute: ${AI_COPILOT_RATE_TENANT:20}
       expose-model-in-capabilities: ${AI_COPILOT_EXPOSE_MODEL:false}
+    actions:
+      # Separate from AI_ENABLED. Production should stay false until validated.
+      enabled: ${AI_ACTIONS_ENABLED:false}
+      approval-ttl: ${AI_ACTION_APPROVAL_TTL:10m}
+      per-user-per-minute: ${AI_ACTION_RATE_USER:6}
+      per-tenant-per-minute: ${AI_ACTION_RATE_TENANT:20}
     ollama:
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
       model: ${OLLAMA_MODEL:qwen3:8b}

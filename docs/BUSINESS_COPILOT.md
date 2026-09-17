@@ -52,13 +52,15 @@ The model is **never** authorization.
 
 **READ_ONLY** (executable now): tools above.
 
-**ACTION_REQUIRES_APPROVAL** (documented only — Phase 4):
+**ACTION_REQUIRES_APPROVAL** (Phase 4 — prepare only, human confirm required):
 
-- `quotation.create`, `invoice.create`, `reminder.send`, …
+- `quotation_create_draft`, `invoice_create_draft`, `reminder_prepare` (no email send)
+
+See [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md).
 
 **FORBIDDEN** (never register):
 
-- `repository.direct`, `sql.execute`, `tenant.switch`, `subscription.forceChange`
+- `repository.direct`, `sql.execute`, `tenant.switch`, `subscription.forceChange`, `payment.record`, `confirm_action`, …
 
 Registration is explicit via `QuoteFlowAiTool` beans + `AiToolRegistry`. No classpath scanning of `@Service` methods.
 
@@ -86,9 +88,9 @@ Tools return `MoneyByCurrency[]` (or equivalent). **Never** sum INR+USD+EUR. Quo
 
 Periods (`THIS_MONTH`, `LAST_MONTH`, `THIS_WEEK`, `TODAY`, `CUSTOM`) resolve with the **business timezone** (`CopilotPeriodResolver` / reporting semantics).
 
-### Mutations
+### Mutations / actions
 
-Copilot does **not** create/update/send/void/email/change settings. Mutation-sounding asks get a clear “not available through Copilot yet” warning path; tools cannot perform writes.
+Read-only tools never write. Phase 4 **action** tools only **prepare** an `ActionProposal` (`PENDING`). Persistence of quotations/invoices (and any email send) happens only after a separate authenticated human **confirm** API call — never from model output alone.
 
 ## API
 
@@ -99,12 +101,14 @@ Copilot does **not** create/update/send/void/email/change settings. Mutation-sou
   "enabled": false,
   "quoteAssistant": false,
   "businessCopilot": false,
+  "aiActions": false,
   "provider": "DISABLED",
   "model": ""
 }
 ```
 
-`businessCopilot` is true only when AI is enabled **and** `AI_ADAPTER=spring-ai`.
+`businessCopilot` is true only when AI is enabled **and** `AI_ADAPTER=spring-ai`.  
+`aiActions` is true only when AI actions are enabled (`AI_ACTIONS_ENABLED`).
 
 ### `POST /api/v1/ai/copilot/ask`
 
@@ -118,10 +122,12 @@ Response:
   "references": [
     { "type": "INVOICE", "id": "…", "displayNumber": "INV-0015", "label": "INV-0015" }
   ],
-  "warnings": []
+  "warnings": [],
+  "actionProposal": null
 }
 ```
 
+When an action tool prepares a proposal, `actionProposal` is a summary (`proposalId`, `actionType`, `status`, `expiresAt`, `summary`, `confirmButtonLabel`). The Angular approval panel loads full details via `GET /api/v1/ai/actions/{id}` and confirms via `POST .../confirm`.
 Frontend builds routes from trusted `type` + `id` — never from model-invented URLs. Answer text is rendered as plain text (no `innerHTML`).
 
 ## Limits (operational + hard caps)
@@ -161,19 +167,22 @@ cd backend
 
 Normal Maven CI tests do **not** require Ollama.
 
-## Future Phase 4 — controlled actions (document only)
+## Phase 4 — controlled actions
+
+Implemented. See [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md).
 
 ```text
-User → Copilot → model proposes action → Action Tool
-  → authorization → tenant validation → business validation
-  → APPROVAL REQUIRED → user confirms exact action
-  → business service → transaction / audit
+User → Copilot → action tool PREPARE ONLY
+  → ActionProposal PENDING → Angular review
+  → POST /api/v1/ai/actions/{id}/confirm (human)
+  → existing QuotationService / InvoiceService
 ```
 
-Do not execute mutations from the model alone.
+Do not execute mutations from the model alone. Reminder **send** is Phase 5.
 
 ## Related
 
+- [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md)
 - [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md)
 - [AI_LOCAL_DEVELOPMENT.md](AI_LOCAL_DEVELOPMENT.md)
 - [QUOTE_ASSISTANT.md](QUOTE_ASSISTANT.md)

@@ -2,12 +2,14 @@ package com.quoteflow.ai.tool;
 
 /**
  * Policy categories for QuoteFlow AI tools.
- * Phase 3 registers and executes only {@link #READ_ONLY}.
+ * Phase 3+: {@link #READ_ONLY} always eligible.
+ * Phase 4+: {@link #ACTION_REQUIRES_APPROVAL} eligible only when AI actions are enabled.
+ * {@link #FORBIDDEN} is never registered.
  */
 public enum AiToolCategory {
-	/** Safe to expose to the model for this phase. */
+	/** Safe to expose to the model for read queries. */
 	READ_ONLY,
-	/** Documented for Phase 4+; must not be registered yet. */
+	/** Prepare-only actions that create PENDING proposals; never execute directly. */
 	ACTION_REQUIRES_APPROVAL,
 	/** Never register or execute. */
 	FORBIDDEN

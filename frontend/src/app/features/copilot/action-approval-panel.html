@@ -1,0 +1,100 @@
+<section class="approval" aria-labelledby="approval-title">
+  <header>
+    <p class="eyebrow">Review required</p>
+    <h2 id="approval-title">{{ summary().summary }}</h2>
+    <p class="meta">
+      Action: {{ summary().actionType }}
+      · Expires: {{ summary().expiresAt | date: 'medium' }}
+    </p>
+  </header>
+
+  @if (loading()) {
+    <div class="state" role="status" aria-live="polite">
+      <mat-spinner diameter="28"></mat-spinner>
+      <span>Loading proposal details…</span>
+    </div>
+  } @else if (success(); as ok) {
+    <div class="banner ok" role="status" aria-live="polite">
+      <p>{{ ok.message }}</p>
+      @if (resultHref(ok); as href) {
+        <a mat-stroked-button [routerLink]="href">View created record</a>
+      }
+    </div>
+  } @else if (detail(); as d) {
+    <div class="payload">
+      @if (d.payload['customerDisplayName']; as name) {
+        <div class="row"><span>Customer</span><strong>{{ name }}</strong></div>
+      }
+      @if (d.payload['currency']; as currency) {
+        <div class="row"><span>Currency</span><strong>{{ currency }}</strong></div>
+      }
+      @if (d.payload['invoiceNumber']; as inv) {
+        <div class="row"><span>Invoice</span><strong>{{ inv }}</strong></div>
+      }
+      @if (d.payload['balanceDue'] != null) {
+        <div class="row"><span>Balance due</span><strong>{{ d.payload['currency'] }} {{ d.payload['balanceDue'] }}</strong></div>
+      }
+      @if (d.payload['subject']; as subject) {
+        <div class="row"><span>Subject</span><strong>{{ subject }}</strong></div>
+      }
+      @if (d.payload['bodyPlainText']; as body) {
+        <div class="block">
+          <span>Prepared reminder (plain text)</span>
+          <pre>{{ body }}</pre>
+        </div>
+      }
+
+      @if (lineItems(d.payload).length) {
+        <h3>Items</h3>
+        <ul class="items">
+          @for (item of lineItems(d.payload); track $index) {
+            <li>
+              {{ $any(item).description }}
+              · qty {{ $any(item).quantity }}
+              · {{ d.payload['currency'] }} {{ $any(item).unitPrice }}
+            </li>
+          }
+        </ul>
+      }
+
+      @if (d.preview['total'] != null) {
+        <div class="totals" aria-label="Authoritative totals">
+          <div class="row"><span>Subtotal</span><strong>{{ d.preview['currency'] }} {{ d.preview['subtotal'] }}</strong></div>
+          <div class="row"><span>Discount</span><strong>{{ d.preview['currency'] }} {{ d.preview['discountAmount'] }}</strong></div>
+          <div class="row"><span>Tax</span><strong>{{ d.preview['currency'] }} {{ d.preview['taxAmount'] }}</strong></div>
+          <div class="row total"><span>Total</span><strong>{{ d.preview['currency'] }} {{ d.preview['total'] }}</strong></div>
+        </div>
+      }
+
+      @if (d.preview['sendsEmail'] === false) {
+        <p class="note">Email will not be sent. Accepting only stores this prepared reminder for review.</p>
+      }
+    </div>
+
+    @if (error(); as err) {
+      <div class="banner error" role="alert">{{ err }}</div>
+    }
+
+    <div class="actions">
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        class="confirm"
+        [disabled]="busy() || d.status !== 'PENDING'"
+        (click)="confirm()"
+      >
+        @if (busy()) {
+          <mat-spinner diameter="18"></mat-spinner>
+        }
+        {{ d.confirmButtonLabel }}
+      </button>
+      <button mat-stroked-button type="button" class="cancel" [disabled]="busy()" (click)="cancel()">
+        Cancel
+      </button>
+    </div>
+  } @else if (error(); as err) {
+    <div class="banner error" role="alert">{{ err }}</div>
+    <button mat-stroked-button type="button" (click)="closed.emit()">Dismiss</button>
+  }
+</section>

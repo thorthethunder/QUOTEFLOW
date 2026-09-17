@@ -1,6 +1,7 @@
 package com.quoteflow.ai.tool;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.quoteflow.ai.config.AiProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ToolContext;
@@ -15,8 +16,10 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 /**
- * Explicit allowlist of QuoteFlow AI tools. Fail closed: only tools registered here
- * and categorized {@link AiToolCategory#READ_ONLY} are exposed to the model.
+ * Explicit allowlist of QuoteFlow AI tools. Fail closed.
+ * READ_ONLY tools always register when present.
+ * ACTION_REQUIRES_APPROVAL tools register only when AI actions are enabled.
+ * FORBIDDEN / unknown categories never register.
  */
 @Component
 public class AiToolRegistry {
@@ -30,21 +33,34 @@ public class AiToolRegistry {
 	public AiToolRegistry(
 			List<QuoteFlowAiTool> candidates,
 			ObjectMapper objectMapper,
-			AiToolArgumentValidator argumentValidator) {
+			AiToolArgumentValidator argumentValidator,
+			AiProperties aiProperties) {
 		this.objectMapper = objectMapper;
 		this.argumentValidator = argumentValidator;
+		boolean actionsEnabled = aiProperties.getActions().isEnabled();
 		for (QuoteFlowAiTool tool : candidates) {
-			if (tool.category() != AiToolCategory.READ_ONLY) {
-				log.warn("ai.tool.skipped name={} category={} reason=not_read_only",
+			if (tool.category() == AiToolCategory.READ_ONLY) {
+				register(tool);
+			} else if (tool.category() == AiToolCategory.ACTION_REQUIRES_APPROVAL) {
+				if (actionsEnabled) {
+					register(tool);
+				} else {
+					log.info("ai.tool.skipped name={} category={} reason=actions_disabled",
+							tool.name(), tool.category());
+				}
+			} else {
+				log.warn("ai.tool.skipped name={} category={} reason=not_allowlisted_category",
 						tool.name(), tool.category());
-				continue;
 			}
-			if (tools.containsKey(tool.name())) {
-				throw new IllegalStateException("Duplicate AI tool registration: " + tool.name());
-			}
-			tools.put(tool.name(), tool);
-			log.info("ai.tool.registered name={} category={}", tool.name(), tool.category());
 		}
+	}
+
+	private void register(QuoteFlowAiTool tool) {
+		if (tools.containsKey(tool.name())) {
+			throw new IllegalStateException("Duplicate AI tool registration: " + tool.name());
+		}
+		tools.put(tool.name(), tool);
+		log.info("ai.tool.registered name={} category={}", tool.name(), tool.category());
 	}
 
 	public List<String> allowlistedNames() {
@@ -59,9 +75,6 @@ public class AiToolRegistry {
 		return tool;
 	}
 
-	/**
-	 * Builds Spring AI callbacks for the current allowlist only.
-	 */
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public List<ToolCallback> springCallbacks() {
 		List<ToolCallback> callbacks = new ArrayList<>();

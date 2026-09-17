@@ -103,9 +103,9 @@ Local Ollama: provider API monetary cost is typically zero; **compute/infrastruc
 |-------|--------|--------|
 | **AI Phase 1** | Provider foundation + Ollama + qwen3:8b local | **CLOSED PASS** |
 | **AI Phase 2** | Quote Assistant + Spring AI | **CLOSED PASS** |
-| **AI Phase 3** | Read-only Business Copilot | **THIS PHASE** |
-| **AI Phase 4** | Controlled action tools + human approval | NEXT |
-| **AI Phase 5** | Payment Reminder Assistant | Planned |
+| **AI Phase 3** | Read-only Business Copilot | **CLOSED PASS** |
+| **AI Phase 4** | Controlled action tools + human approval | **THIS PHASE** |
+| **AI Phase 5** | Payment Reminder Assistant + approved sending | NEXT |
 | **AI Phase 6** | Reporting insights | Planned |
 | **AI Phase 7** | Tenant-isolated RAG | Planned |
 | **AI Phase 8** | Agent workflows | Planned |
@@ -116,4 +116,6 @@ Local Ollama: provider API monetary cost is typically zero; **compute/infrastruc
 
 **Incorrect:** AI writing totals; AI choosing tenant; exposing repositories to the model.
 
-**Correct:** Copilot → allowlisted tool → business service (auth + tenant) → summarize tool result.
+**Correct:** Copilot → allowlisted tool → (read: business service) or (action: prepare proposal → human confirm → business service).
+
+See [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md) for Phase 4 proposal → confirm → execute.
