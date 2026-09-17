@@ -119,6 +119,12 @@ quoteflow:
       max-prompt-chars: ${AI_QUOTE_ASSISTANT_MAX_PROMPT:4000}
       per-user-per-minute: ${AI_QUOTE_ASSISTANT_RATE_USER:10}
       per-tenant-per-minute: ${AI_QUOTE_ASSISTANT_RATE_TENANT:30}
+    business-copilot:
+      max-message-chars: ${AI_COPILOT_MAX_MESSAGE:2000}
+      max-tool-calls: ${AI_COPILOT_MAX_TOOL_CALLS:6}
+      per-user-per-minute: ${AI_COPILOT_RATE_USER:6}
+      per-tenant-per-minute: ${AI_COPILOT_RATE_TENANT:20}
+      expose-model-in-capabilities: ${AI_COPILOT_EXPOSE_MODEL:false}
     ollama:
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
       model: ${OLLAMA_MODEL:qwen3:8b}

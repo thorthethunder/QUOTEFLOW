@@ -16,8 +16,9 @@ public class LoggingAiUsageRecorder implements AiUsageRecorder {
 	public void record(AiUsageEvent event) {
 		int in = event.inputTokens() == null ? -1 : event.inputTokens();
 		int out = event.outputTokens() == null ? -1 : event.outputTokens();
+		int tools = event.toolCallCount() == null ? -1 : event.toolCallCount();
 		log.info(
-				"ai.usage provider={} model={} feature={} success={} errorCode={} latencyMs={} inputTokens={} outputTokens={} businessIdPresent={} userIdPresent={}",
+				"ai.usage provider={} model={} feature={} success={} errorCode={} latencyMs={} inputTokens={} outputTokens={} toolCalls={} businessIdPresent={} userIdPresent={}",
 				event.providerName(),
 				event.model(),
 				event.feature(),
@@ -26,6 +27,7 @@ public class LoggingAiUsageRecorder implements AiUsageRecorder {
 				event.latencyMs(),
 				in,
 				out,
+				tools,
 				event.businessId() != null,
 				event.userId() != null);
 	}

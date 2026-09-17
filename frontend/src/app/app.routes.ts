@@ -116,6 +116,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'copilot',
+        loadComponent: () =>
+          import('./features/copilot/business-copilot-page').then(
+            (m) => m.BusinessCopilotPageComponent,
+          ),
+      },
+      {
         path: 'plan',
         loadComponent: () =>
           import('./features/plan/plan-page').then((m) => m.PlanPageComponent),

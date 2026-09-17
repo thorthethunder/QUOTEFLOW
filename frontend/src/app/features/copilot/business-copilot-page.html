@@ -1,0 +1,84 @@
+<section class="copilot" aria-labelledby="copilot-title">
+  <header class="page-header">
+    <h1 id="copilot-title">Business Copilot</h1>
+    <p class="subtitle">Ask about your customers, quotations, invoices and payments.</p>
+    <p class="read-only-note">Read-only for now — Copilot checks your data but does not create, send, or change records.</p>
+  </header>
+
+  @if (loadingCaps()) {
+    <div class="state" role="status" aria-live="polite">
+      <mat-spinner diameter="36"></mat-spinner>
+      <span>Checking Copilot availability…</span>
+    </div>
+  } @else if (!available()) {
+    <div class="banner" role="status">
+      Business Copilot is not available right now. Your QuoteFlow data and normal workflows are still available.
+    </div>
+  } @else {
+    <div class="examples" aria-label="Example questions">
+      @for (ex of examples; track ex) {
+        <button type="button" class="example" (click)="useExample(ex)">{{ ex }}</button>
+      }
+    </div>
+
+    <form class="ask-form" (ngSubmit)="ask()">
+      <mat-form-field appearance="outline" class="ask-field">
+        <mat-label>Ask about your business…</mat-label>
+        <textarea
+          matInput
+          rows="3"
+          [formControl]="message"
+          maxlength="2000"
+          [attr.aria-busy]="asking()"
+        ></textarea>
+      </mat-form-field>
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+        class="ask-btn"
+        [disabled]="asking() || message.invalid"
+      >
+        @if (asking()) {
+          <mat-spinner diameter="20"></mat-spinner>
+          <span>Checking your QuoteFlow data…</span>
+        } @else {
+          Ask
+        }
+      </button>
+    </form>
+
+    @if (error(); as err) {
+      <div class="banner error" role="alert">{{ err }}</div>
+    }
+
+    @if (result(); as res) {
+      <article class="answer" aria-live="polite">
+        <h2>Answer</h2>
+        <p class="answer-text">{{ res.answer }}</p>
+
+        @if (res.warnings.length) {
+          <ul class="warnings">
+            @for (w of res.warnings; track w) {
+              <li>{{ w }}</li>
+            }
+          </ul>
+        }
+
+        @if (res.references.length) {
+          <h3>Related</h3>
+          <ul class="refs">
+            @for (ref of res.references; track ref.type + ref.id) {
+              <li>
+                <span>{{ refTitle(ref) }}</span>
+                @if (routeFor(ref); as href) {
+                  <a mat-stroked-button [routerLink]="href">View</a>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </article>
+    }
+  }
+</section>

@@ -90,7 +90,7 @@ public class ReportingService {
 				reportingRepository.recentPayments(businessId));
 	}
 
-	static ZoneId resolveZone(String timezone) {
+	public static ZoneId resolveZone(String timezone) {
 		if (timezone == null || timezone.isBlank()) {
 			return ZoneId.of("UTC");
 		}

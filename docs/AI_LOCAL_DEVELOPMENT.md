@@ -1,20 +1,12 @@
-# QuoteFlow AI — local development (AI Phase 1)
+# QuoteFlow AI — local development
 
 Optional subsystem. **Default:** `AI_ENABLED=false`. Core SaaS works without Ollama.
 
 ## Why qwen3:8b
 
-Selected as the initial **local development** target for a practical balance of:
+Selected as the initial **local development** target for instruction following, structured extraction, and tool-oriented workflows. It is **not** automatically the production model.
 
-- instruction following and business-language understanding
-- information extraction / structured responses
-- reasoning and future tool-oriented workflows
-- local hardware requirements
-
-It is **not** automatically the production model. Production choice needs QuoteFlow-specific evaluation later.
-
-**Lower-resource fallback (manual only):** `qwen3:4b`  
-Never silently switch models when `qwen3:8b` is missing — report the provider/model error.
+**Lower-resource fallback (manual only):** `qwen3:4b` — never silently switch.
 
 ## Install Ollama + model
 
@@ -32,13 +24,21 @@ QuoteFlow **never** auto-downloads multi-GB models on startup or in CI.
 ```text
 AI_ENABLED=true
 AI_PROVIDER=OLLAMA
+AI_ADAPTER=spring-ai
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=qwen3:8b
 ```
 
-Optional timeouts: `OLLAMA_CONNECT_TIMEOUT` (default 5s), `OLLAMA_READ_TIMEOUT` (default 120s).
+Optional: `OLLAMA_CONNECT_TIMEOUT`, `OLLAMA_READ_TIMEOUT`, Copilot rate/tool limits (`AI_COPILOT_*`).
 
-Then run the backend as usual. With `AI_ENABLED=false`, Ollama need not be running.
+With `AI_ENABLED=false`, Ollama need not be running.
+
+## Features
+
+| Feature | Path | Notes |
+|---------|------|--------|
+| Quote Assistant | Quotation editor → Draft with AI | Structured draft; does not persist |
+| Business Copilot | `/app/copilot` | Read-only tools; see [BUSINESS_COPILOT.md](BUSINESS_COPILOT.md) |
 
 ## Optional Docker Compose profile
 
@@ -46,45 +46,27 @@ Then run the backend as usual. With `AI_ENABLED=false`, Ollama need not be runni
 docker compose --profile ai up -d
 ```
 
-Plain `docker compose up` does **not** start Ollama.
-
 | Spring runs on | `OLLAMA_BASE_URL` |
 |----------------|-------------------|
 | Host machine | `http://localhost:11434` |
-| Compose network container | `http://ollama:11434` |
+| Compose network | `http://ollama:11434` |
 
-Pull the model explicitly (host CLI or `docker exec` into `quoteflow-ollama`).
+## Live smokes (not CI)
 
-## Architecture boundaries
-
-```text
-AiProvider (QuoteFlow)
-  └── OllamaAiProvider → OllamaClient → Ollama HTTP API
+```bash
+set QUOTEFLOW_AI_LIVE=true
+cd backend
+.\mvnw.cmd -Dtest=Qwen3LiveSmokeIT test
+.\mvnw.cmd -Dtest=Qwen3ToolCallingLiveIT test
 ```
 
-- No Spring AI / LangChain in Phase 1
-- No repository access from AI packages
-- AI is never authoritative for money — use `FinancialDocumentCalculator` after validation
-- Model output is **untrusted** input (JSON + bean validation)
-- Prompts/responses are not logged at INFO (usage metadata only)
-- `OLLAMA_BASE_URL` is trusted server config only (SSRF: never from browser)
+## Boundaries
 
-## Structured smoke (manual)
-
-With Ollama + `qwen3:8b` available, a provider smoke can extract a **non-persisted** `QuotationDraftProposal` from text such as:
-
-> Create a quotation draft for Raj Electrical for 2 ceiling fans at 3000 each, 5 switches at 250 each, wiring work at 1800 and labour at 2500.
-
-Do **not** create quotation rows from this smoke.
+- No repository access from AI tool packages
+- AI is never authoritative for money
+- Tool arguments are untrusted; tenant from auth context
+- Prompts/responses not logged at INFO
 
 ## Health
 
-Ollama down ⇒ AI unavailable; application readiness still **UP** (DB still gates readiness).
-
-## Production
-
-- Default remains `AI_ENABLED=false`
-- Do not deploy Ollama to Railway in Phase 1
-- Future internal Ollama is supported by config only — not production-validated here
-
-See [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md) for roadmap (AI Phase 2 = Quote Assistant).
+AI outage must not mark the application DOWN. See `AiHealthIndicator`.

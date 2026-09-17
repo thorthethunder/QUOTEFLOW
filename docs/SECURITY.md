@@ -20,7 +20,8 @@
 | Transactional email | **IMPLEMENTED** (Phase 13) — real Resend E2E deferred |
 | Hosted staging security | **PASS** (Phase 16) — see [STAGING_VALIDATION.md](STAGING_VALIDATION.md) |
 | Production launch readiness | **NOT READY** — gates in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) |
-| AI Quote Assistant | **IMPLEMENTED** (Phase 2) — [QUOTE_ASSISTANT.md](QUOTE_ASSISTANT.md); AI_ENABLED=false by default |
+| AI Quote Assistant | **IMPLEMENTED** (AI Phase 2) — [QUOTE_ASSISTANT.md](QUOTE_ASSISTANT.md); AI_ENABLED=false by default |
+| AI Business Copilot | **IMPLEMENTED** (AI Phase 3) — read-only tools; [BUSINESS_COPILOT.md](BUSINESS_COPILOT.md) |
 
 ## IMPLEMENTED (Phase 1–3)
 

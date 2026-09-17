@@ -31,6 +31,7 @@ public class AiProperties {
 
 	private final Ollama ollama = new Ollama();
 	private final QuoteAssistant quoteAssistant = new QuoteAssistant();
+	private final BusinessCopilot businessCopilot = new BusinessCopilot();
 
 	public boolean isEnabled() {
 		return enabled;
@@ -84,6 +85,63 @@ public class AiProperties {
 
 	public QuoteAssistant getQuoteAssistant() {
 		return quoteAssistant;
+	}
+
+	public BusinessCopilot getBusinessCopilot() {
+		return businessCopilot;
+	}
+
+	public static class BusinessCopilot {
+		/** Hard upper bound — client cannot raise this. */
+		public static final int HARD_MAX_TOOL_CALLS = 8;
+		public static final int HARD_MAX_MESSAGE_CHARS = 2000;
+		public static final int HARD_MAX_RESULT_ROWS = 20;
+
+		private int maxMessageChars = 2000;
+		private int maxToolCalls = 6;
+		private int perUserPerMinute = 6;
+		private int perTenantPerMinute = 20;
+		private boolean exposeModelInCapabilities = false;
+
+		public int getMaxMessageChars() {
+			return maxMessageChars;
+		}
+
+		public void setMaxMessageChars(int maxMessageChars) {
+			this.maxMessageChars = Math.max(200, Math.min(maxMessageChars, HARD_MAX_MESSAGE_CHARS));
+		}
+
+		public int getMaxToolCalls() {
+			return maxToolCalls;
+		}
+
+		public void setMaxToolCalls(int maxToolCalls) {
+			this.maxToolCalls = Math.max(1, Math.min(maxToolCalls, HARD_MAX_TOOL_CALLS));
+		}
+
+		public int getPerUserPerMinute() {
+			return perUserPerMinute;
+		}
+
+		public void setPerUserPerMinute(int perUserPerMinute) {
+			this.perUserPerMinute = Math.max(1, perUserPerMinute);
+		}
+
+		public int getPerTenantPerMinute() {
+			return perTenantPerMinute;
+		}
+
+		public void setPerTenantPerMinute(int perTenantPerMinute) {
+			this.perTenantPerMinute = Math.max(1, perTenantPerMinute);
+		}
+
+		public boolean isExposeModelInCapabilities() {
+			return exposeModelInCapabilities;
+		}
+
+		public void setExposeModelInCapabilities(boolean exposeModelInCapabilities) {
+			this.exposeModelInCapabilities = exposeModelInCapabilities;
+		}
 	}
 
 	public static class QuoteAssistant {

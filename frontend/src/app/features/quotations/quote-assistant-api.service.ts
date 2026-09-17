@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 export type AiCapabilities = {
   enabled: boolean;
   quoteAssistant: boolean;
+  businessCopilot?: boolean;
   provider: string;
   model: string;
 };

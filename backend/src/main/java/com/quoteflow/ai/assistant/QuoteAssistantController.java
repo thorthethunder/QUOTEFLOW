@@ -35,9 +35,12 @@ public class QuoteAssistantController {
 	@GetMapping("/capabilities")
 	public AiCapabilitiesResponse capabilities(@AuthenticationPrincipal AuthenticatedUser principal) {
 		boolean enabled = aiProperties.isEnabled();
+		boolean springAi = "spring-ai".equalsIgnoreCase(
+				aiProperties.getAdapter() == null ? "" : aiProperties.getAdapter().trim());
 		return new AiCapabilitiesResponse(
 				enabled,
 				enabled,
+				enabled && springAi,
 				enabled ? aiProvider.providerName() : "DISABLED",
 				enabled ? aiProvider.model() : "");
 	}

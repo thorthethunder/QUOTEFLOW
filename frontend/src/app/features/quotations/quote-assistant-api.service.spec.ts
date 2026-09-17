@@ -25,7 +25,7 @@ describe('QuoteAssistantApiService', () => {
     });
     const req = http.expectOne((r) => r.url.endsWith('/ai/capabilities'));
     expect(req.request.method).toBe('GET');
-    req.flush({ enabled: true, quoteAssistant: true, provider: 'OLLAMA', model: 'qwen3:8b' });
+    req.flush({ enabled: true, quoteAssistant: true, businessCopilot: true, provider: 'OLLAMA', model: 'qwen3:8b' });
   });
 
   it('posts draft prompt without persisting quotation path', () => {
