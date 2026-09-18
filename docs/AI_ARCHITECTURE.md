@@ -38,6 +38,7 @@ Package: `com.quoteflow.ai` — QuoteFlow-owned. Business Copilot tool calling r
 Local development guide: [AI_LOCAL_DEVELOPMENT.md](AI_LOCAL_DEVELOPMENT.md).  
 Business Copilot: [BUSINESS_COPILOT.md](BUSINESS_COPILOT.md).  
 Quote Assistant: [QUOTE_ASSISTANT.md](QUOTE_ASSISTANT.md).
+Reporting Insights: [AI_REPORTING_INSIGHTS.md](AI_REPORTING_INSIGHTS.md).
 
 ### Local development
 
@@ -71,11 +72,15 @@ Keys for future managed providers: backend secret manager only — never Angular
 **AI totals are not authoritative.**  
 Authoritative money: `FinancialDocumentCalculator` / `PaymentSummaryCalculator` / `ReportingService`.
 
+Reporting Insights returns deterministic facts separately from AI narrative. Percentage deltas are calculated in
+backend code with explicit zero-denominator semantics; AI never calculates authoritative reporting totals.
+
 Multi-currency: preserve `MoneyByCurrency[]` — never sum across currencies without FX.
 
 ## Structured output & tools
 
 - Quote Assistant: `generateStructured` + JSON Schema + `StructuredOutputValidator`.
+- Reporting Insights: `ReportingInsightService` builds a bounded reporting dataset first, then optionally calls AI.
 - Business Copilot: Spring AI tool calling → `AiToolRegistry` allowlist → services.
 
 ## Telemetry
@@ -106,7 +111,7 @@ Local Ollama: provider API monetary cost is typically zero; **compute/infrastruc
 | **AI Phase 3** | Read-only Business Copilot | **CLOSED PASS** |
 | **AI Phase 4** | Controlled action tools + human approval | **CLOSED PASS** |
 | **AI Phase 5** | Payment Reminder Assistant + approved sending | **CLOSED PASS** |
-| **AI Phase 6** | Reporting insights | NEXT |
+| **AI Phase 6** | Reporting insights | **CLOSED PASS** |
 | **AI Phase 7** | Tenant-isolated RAG | Planned |
 | **AI Phase 8** | Agent workflows | Planned |
 | **AI Phase 9** | Usage / cost / entitlements | Planned |

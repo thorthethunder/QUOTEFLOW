@@ -43,6 +43,7 @@ export class AppShellComponent {
     { label: 'Customers', path: '/app/customers', icon: 'groups', exact: false },
     { label: 'Quotations', path: '/app/quotations', icon: 'request_quote', exact: false },
     { label: 'Invoices', path: '/app/invoices', icon: 'receipt_long', exact: false },
+    { label: 'Insights', path: '/app/insights', icon: 'query_stats', exact: false },
     { label: 'Business Copilot', path: '/app/copilot', icon: 'smart_toy', exact: false },
     { label: 'Plan & usage', path: '/app/plan', icon: 'workspace_premium', exact: false },
   ] as const;

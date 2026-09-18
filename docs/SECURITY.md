@@ -158,3 +158,13 @@ See [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md), [AI_ARCHITECTURE.md](AI_AR
 | Malicious knowledge docs | Curate / isolate RAG later |
 | Cost abuse | Quotas before AI phase |
 | Approval bypass | Side effects need explicit user confirm |
+
+## AI Phase 6 reporting insight controls
+
+- `POST /api/v1/ai/insights/analyze` is authenticated and derives tenant from JWT principal only.
+- No SQL, JPQL, repository, EntityManager, or JdbcTemplate is exposed to AI.
+- Reporting facts are calculated by `ReportingService` / `ReportingRepository`; AI narrative is non-authoritative.
+- Mixed currencies remain separate; no FX or combined total is invented.
+- Top invoices/customers are bounded and returned as evidence references for trusted frontend navigation.
+- Recent dashboard records are omitted from insight responses to minimize business data exposure.
+- AI disabled/unavailable/timeout returns facts and warnings rather than blocking reporting.

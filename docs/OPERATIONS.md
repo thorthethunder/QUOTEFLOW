@@ -137,3 +137,18 @@ Follow FinOps: retention, sampling, cardinality control. See [COST_ARCHITECTURE.
 ## Integration with platform admin
 
 Platform admin may show a **high-level** Operations card and a link to Grafana for authorized operators. Detailed infra stays in Grafana. See [ADMIN_ARCHITECTURE.md](ADMIN_ARCHITECTURE.md).
+
+## AI reporting insights operations
+
+Reporting Insights is optional and uses the same `AI_ENABLED` provider switch. The deterministic reporting API remains usable
+when AI is disabled or unavailable. Tune per-instance limits with:
+
+```text
+AI_REPORTING_INSIGHTS_MAX_MESSAGE=1000
+AI_REPORTING_INSIGHTS_MAX_OUTSTANDING_ROWS=5
+AI_REPORTING_INSIGHTS_RATE_USER=6
+AI_REPORTING_INSIGHTS_RATE_TENANT=20
+```
+
+Do not log prompts, full datasets, customer notes, or invoice text. Usage telemetry records feature, provider/model,
+latency, success/failure, and tenant/user presence only.

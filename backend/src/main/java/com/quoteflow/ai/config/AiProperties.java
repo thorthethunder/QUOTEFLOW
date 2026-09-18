@@ -32,6 +32,7 @@ public class AiProperties {
 	private final Ollama ollama = new Ollama();
 	private final QuoteAssistant quoteAssistant = new QuoteAssistant();
 	private final BusinessCopilot businessCopilot = new BusinessCopilot();
+	private final ReportingInsights reportingInsights = new ReportingInsights();
 	private final Actions actions = new Actions();
 
 	public boolean isEnabled() {
@@ -92,8 +93,54 @@ public class AiProperties {
 		return businessCopilot;
 	}
 
+	public ReportingInsights getReportingInsights() {
+		return reportingInsights;
+	}
+
 	public Actions getActions() {
 		return actions;
+	}
+
+	public static class ReportingInsights {
+		public static final int HARD_MAX_MESSAGE_CHARS = 1000;
+		public static final int HARD_MAX_RESULT_ROWS = 10;
+
+		private int maxMessageChars = 1000;
+		private int maxOutstandingRows = 5;
+		private int perUserPerMinute = 6;
+		private int perTenantPerMinute = 20;
+
+		public int getMaxMessageChars() {
+			return maxMessageChars;
+		}
+
+		public void setMaxMessageChars(int maxMessageChars) {
+			this.maxMessageChars = Math.max(100, Math.min(maxMessageChars, HARD_MAX_MESSAGE_CHARS));
+		}
+
+		public int getMaxOutstandingRows() {
+			return maxOutstandingRows;
+		}
+
+		public void setMaxOutstandingRows(int maxOutstandingRows) {
+			this.maxOutstandingRows = Math.max(1, Math.min(maxOutstandingRows, HARD_MAX_RESULT_ROWS));
+		}
+
+		public int getPerUserPerMinute() {
+			return perUserPerMinute;
+		}
+
+		public void setPerUserPerMinute(int perUserPerMinute) {
+			this.perUserPerMinute = Math.max(1, perUserPerMinute);
+		}
+
+		public int getPerTenantPerMinute() {
+			return perTenantPerMinute;
+		}
+
+		public void setPerTenantPerMinute(int perTenantPerMinute) {
+			this.perTenantPerMinute = Math.max(1, perTenantPerMinute);
+		}
 	}
 
 	public static class Actions {

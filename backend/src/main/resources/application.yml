@@ -125,6 +125,11 @@ quoteflow:
       per-user-per-minute: ${AI_COPILOT_RATE_USER:6}
       per-tenant-per-minute: ${AI_COPILOT_RATE_TENANT:20}
       expose-model-in-capabilities: ${AI_COPILOT_EXPOSE_MODEL:false}
+    reporting-insights:
+      max-message-chars: ${AI_REPORTING_INSIGHTS_MAX_MESSAGE:1000}
+      max-outstanding-rows: ${AI_REPORTING_INSIGHTS_MAX_OUTSTANDING_ROWS:5}
+      per-user-per-minute: ${AI_REPORTING_INSIGHTS_RATE_USER:6}
+      per-tenant-per-minute: ${AI_REPORTING_INSIGHTS_RATE_TENANT:20}
     actions:
       # Separate from AI_ENABLED. Production should stay false until validated.
       enabled: ${AI_ACTIONS_ENABLED:false}

@@ -1,0 +1,173 @@
+<section class="insights">
+  <header class="page-header">
+    <div>
+      <h1>Business insights</h1>
+      <p class="subtitle">Authoritative reporting metrics with an AI summary layered on top.</p>
+    </div>
+  </header>
+
+  <form class="insight-form" [formGroup]="form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline" class="question-field">
+      <mat-label>Question</mat-label>
+      <input matInput formControlName="question" maxlength="1000" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="period-field">
+      <mat-label>Period</mat-label>
+      <mat-select formControlName="period">
+        <mat-option value="THIS_MONTH">This month</mat-option>
+        <mat-option value="LAST_MONTH">Last month</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button mat-flat-button color="primary" type="submit" [disabled]="loading() || form.invalid">
+      <mat-icon>query_stats</mat-icon>
+      Analyze
+    </button>
+  </form>
+
+  <div class="suggestions" aria-label="Suggested insight questions">
+    @for (question of suggestions; track question) {
+      <button mat-stroked-button type="button" (click)="useSuggestion(question)">
+        {{ question }}
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="state" role="status" aria-live="polite">
+      <mat-spinner diameter="40" />
+      <p>Loading business insights...</p>
+    </div>
+  } @else if (error()) {
+    <div class="state state-error" role="alert">
+      <p>{{ error() }}</p>
+      <button mat-flat-button color="primary" type="button" (click)="retry()">Retry</button>
+    </div>
+  } @else if (insight(); as data) {
+    <section class="period-strip" aria-label="Insight period">
+      <div>
+        <span>Period</span>
+        <strong>{{ data.period.from }} to {{ data.period.to }}</strong>
+      </div>
+      <div>
+        <span>Compared with</span>
+        <strong>{{ data.comparisonPeriod.from }} to {{ data.comparisonPeriod.to }}</strong>
+      </div>
+      <div>
+        <span>Timezone</span>
+        <strong>{{ data.period.timezone }}</strong>
+      </div>
+    </section>
+
+    <section class="currency-grid" aria-label="Currency-separated metrics">
+      @for (group of currencyGroups(); track group.currency) {
+        <article class="currency-panel">
+          <h2>{{ group.currency }}</h2>
+          <div class="metric-row">
+            <span>Collections</span>
+            <strong>{{ group.collected?.currentValue ?? 0 | currency: group.currency }}</strong>
+            <em [class]="trendClass(group.collected)">
+              {{ deltaLabel(group.collected) }} · {{ percentLabel(group.collected) }}
+            </em>
+          </div>
+          <div class="metric-row">
+            <span>Invoiced</span>
+            <strong>{{ group.invoiced?.currentValue ?? 0 | currency: group.currency }}</strong>
+            <em [class]="trendClass(group.invoiced)">
+              {{ deltaLabel(group.invoiced) }} · {{ percentLabel(group.invoiced) }}
+            </em>
+          </div>
+          <div class="metric-row">
+            <span>Outstanding</span>
+            <strong>{{ group.outstanding?.currentValue ?? 0 | currency: group.currency }}</strong>
+            <em [class]="trendClass(group.outstanding)">
+              {{ deltaLabel(group.outstanding) }} · {{ percentLabel(group.outstanding) }}
+            </em>
+          </div>
+        </article>
+      } @empty {
+        <article class="currency-panel">
+          <h2>No currency activity</h2>
+          <p class="empty">No invoiced, collected, or outstanding amounts were found for this period.</p>
+        </article>
+      }
+    </section>
+
+    <section class="summary-panel" aria-labelledby="ai-summary-heading">
+      <div class="panel-heading">
+        <h2 id="ai-summary-heading">AI summary</h2>
+        @if (!data.aiNarrativeAvailable) {
+          <span class="qf-chip qf-chip--draft">Fallback</span>
+        }
+      </div>
+      <p class="answer-text">{{ data.answer }}</p>
+      @if (data.warnings.length) {
+        <ul class="warnings">
+          @for (warning of data.warnings; track warning) {
+            <li>{{ warning }}</li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="analysis-grid">
+      <article class="panel">
+        <h2>Needs attention</h2>
+        @if (data.topOutstandingInvoices.length === 0) {
+          <p class="empty">No outstanding invoices in this period.</p>
+        } @else {
+          <ul class="evidence-list">
+            @for (invoice of data.topOutstandingInvoices; track invoice.id) {
+              <li>
+                <a [routerLink]="['/app/invoices', invoice.id]">{{ invoice.invoiceNumber }}</a>
+                <span>{{ invoice.customerDisplayName }}</span>
+                <strong>{{ invoice.balanceDue | currency: invoice.currency }}</strong>
+                <small>{{ invoice.paymentState }} · due {{ invoice.dueDate || 'not set' }}</small>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+
+      <article class="panel">
+        <h2>Customer outstanding</h2>
+        @if (data.customerOutstanding.length === 0) {
+          <p class="empty">No customer outstanding concentration for this period.</p>
+        } @else {
+          <ul class="evidence-list">
+            @for (customer of data.customerOutstanding; track customer.customerId + customer.currency) {
+              <li>
+                <a [routerLink]="['/app/customers', customer.customerId]">
+                  {{ customer.customerDisplayName }}
+                </a>
+                <span>{{ customer.currency }}</span>
+                <strong>{{ customer.outstandingAmount | currency: customer.currency }}</strong>
+                <small>
+                  {{ customer.concentrationPercent === null ? 'No base' : (customer.concentrationPercent | number: '1.2-2') + '%' }}
+                  of {{ customer.currency }} outstanding
+                </small>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+    </section>
+
+    <section class="panel" aria-labelledby="references-heading">
+      <h2 id="references-heading">References</h2>
+      @if (data.references.length === 0) {
+        <p class="empty">No evidence references for this insight.</p>
+      } @else {
+        <div class="reference-list">
+          @for (ref of data.references; track ref.type + ref.id) {
+            @if (referenceRoute(ref); as route) {
+              <a mat-stroked-button [routerLink]="route">
+                <mat-icon>{{ ref.type === 'CUSTOMER' ? 'person' : 'receipt_long' }}</mat-icon>
+                {{ ref.label || ref.displayNumber || ref.type }}
+              </a>
+            }
+          }
+        </div>
+      }
+    </section>
+  }
+</section>

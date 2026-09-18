@@ -184,6 +184,7 @@ Do not execute mutations from the model alone. Reminder **send** is Phase 5.
 ## Related
 
 - [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md)
+- [AI_REPORTING_INSIGHTS.md](AI_REPORTING_INSIGHTS.md)
 - [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md)
 - [AI_LOCAL_DEVELOPMENT.md](AI_LOCAL_DEVELOPMENT.md)
 - [QUOTE_ASSISTANT.md](QUOTE_ASSISTANT.md)

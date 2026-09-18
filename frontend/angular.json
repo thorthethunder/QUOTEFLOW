@@ -93,6 +93,7 @@
                 "input": "public"
               }
             ],
+            "browsers": "ChromeHeadlessNoSandbox",
             "styles": [
               "src/styles.scss"
             ]

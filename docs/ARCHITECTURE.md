@@ -70,6 +70,22 @@ This keeps modules extractable into microservices later without requiring micros
 
 See [ADR-001](adr/ADR-001-modular-monolith-first.md).
 
+## AI Phase 6 reporting insights
+
+Reporting Insights extends the existing modular monolith without adding a separate agent service:
+
+```text
+Angular /app/insights
+  -> ReportingInsightController
+  -> ReportingInsightService
+  -> ReportingService / ReportingRepository
+  -> deterministic facts + bounded evidence
+  -> optional AiProvider narrative
+```
+
+Financial facts, deltas, period boundaries, tenant filtering, and references are backend-authoritative.
+The AI narrative is optional and non-authoritative. See [AI_REPORTING_INSIGHTS.md](AI_REPORTING_INSIGHTS.md).
+
 ## Multi-tenancy
 
 Each **Business** is a tenant (`businesses` table). Each `app_users` row belongs to one business.

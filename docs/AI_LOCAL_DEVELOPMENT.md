@@ -76,3 +76,17 @@ cd backend
 ## Health
 
 AI outage must not mark the application DOWN. See `AiHealthIndicator`.
+
+## Reporting Insights
+
+Business Insights is available at `/app/insights`.
+
+```text
+AI_REPORTING_INSIGHTS_MAX_MESSAGE=1000
+AI_REPORTING_INSIGHTS_MAX_OUTSTANDING_ROWS=5
+AI_REPORTING_INSIGHTS_RATE_USER=6
+AI_REPORTING_INSIGHTS_RATE_TENANT=20
+```
+
+With `AI_ENABLED=false`, the endpoint still returns deterministic facts, bounded evidence, references, and warnings.
+See [AI_REPORTING_INSIGHTS.md](AI_REPORTING_INSIGHTS.md).

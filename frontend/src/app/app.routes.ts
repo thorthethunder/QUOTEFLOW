@@ -123,6 +123,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'insights',
+        loadComponent: () =>
+          import('./features/insights/business-insights-page').then(
+            (m) => m.BusinessInsightsPageComponent,
+          ),
+      },
+      {
         path: 'plan',
         loadComponent: () =>
           import('./features/plan/plan-page').then((m) => m.PlanPageComponent),

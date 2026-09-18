@@ -2,9 +2,11 @@ package com.quoteflow.reporting;
 
 import com.quoteflow.finance.FinancialDocumentCalculator;
 import com.quoteflow.reporting.dto.CollectionsSeriesPoint;
+import com.quoteflow.reporting.dto.CustomerOutstandingDto;
 import com.quoteflow.reporting.dto.CustomerMetricsDto;
 import com.quoteflow.reporting.dto.InvoiceMetricsDto;
 import com.quoteflow.reporting.dto.MoneyByCurrency;
+import com.quoteflow.reporting.dto.OutstandingInvoiceDto;
 import com.quoteflow.reporting.dto.PaymentMetricsDto;
 import com.quoteflow.reporting.dto.QuotationMetricsDto;
 import com.quoteflow.reporting.dto.RecentInvoiceDto;
@@ -13,6 +15,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
@@ -331,6 +334,118 @@ public class ReportingRepository {
 						scale(rs.getBigDecimal("amount"))),
 				businessId,
 				RECENT_LIMIT);
+	}
+
+	public List<OutstandingInvoiceDto> topOutstandingInvoices(
+			UUID businessId, LocalDate from, LocalDate to, int limit) {
+		return jdbcTemplate.query("""
+						WITH paid AS (
+						  SELECT invoice_id, SUM(amount) AS amount_paid
+						  FROM payments
+						  WHERE business_id = ?
+						    AND status = 'RECORDED'
+						  GROUP BY invoice_id
+						)
+						SELECT i.id,
+						       i.invoice_number,
+						       i.customer_id,
+						       i.customer_display_name,
+						       i.issue_date,
+						       i.due_date,
+						       i.currency,
+						       i.total_amount,
+						       COALESCE(p.amount_paid, 0) AS amount_paid,
+						       i.total_amount - COALESCE(p.amount_paid, 0) AS balance_due,
+						       CASE
+						         WHEN COALESCE(p.amount_paid, 0) = 0 THEN 'UNPAID'
+						         WHEN COALESCE(p.amount_paid, 0) >= i.total_amount THEN 'PAID'
+						         ELSE 'PARTIALLY_PAID'
+						       END AS payment_state
+						FROM invoices i
+						LEFT JOIN paid p ON p.invoice_id = i.id
+						WHERE i.business_id = ?
+						  AND i.status = 'SENT'
+						  AND i.issue_date BETWEEN ? AND ?
+						  AND i.total_amount - COALESCE(p.amount_paid, 0) > 0
+						ORDER BY balance_due DESC, i.due_date NULLS LAST, i.invoice_number
+						LIMIT ?
+						""",
+				(rs, rowNum) -> new OutstandingInvoiceDto(
+						(UUID) rs.getObject("id"),
+						rs.getString("invoice_number"),
+						(UUID) rs.getObject("customer_id"),
+						rs.getString("customer_display_name"),
+						rs.getDate("issue_date").toLocalDate(),
+						rs.getDate("due_date") == null ? null : rs.getDate("due_date").toLocalDate(),
+						rs.getString("currency"),
+						scale(rs.getBigDecimal("total_amount")),
+						scale(rs.getBigDecimal("amount_paid")),
+						scale(rs.getBigDecimal("balance_due")),
+						rs.getString("payment_state")),
+				businessId,
+				businessId,
+				Date.valueOf(from),
+				Date.valueOf(to),
+				limit);
+	}
+
+	public List<CustomerOutstandingDto> topOutstandingCustomers(
+			UUID businessId, LocalDate from, LocalDate to, int limit) {
+		return jdbcTemplate.query("""
+						WITH paid AS (
+						  SELECT invoice_id, SUM(amount) AS amount_paid
+						  FROM payments
+						  WHERE business_id = ?
+						    AND status = 'RECORDED'
+						  GROUP BY invoice_id
+						),
+						customer_balances AS (
+						  SELECT i.customer_id,
+						         i.customer_display_name,
+						         i.currency,
+						         SUM(i.total_amount - COALESCE(p.amount_paid, 0)) AS outstanding_amount
+						  FROM invoices i
+						  LEFT JOIN paid p ON p.invoice_id = i.id
+						  WHERE i.business_id = ?
+						    AND i.status = 'SENT'
+						    AND i.issue_date BETWEEN ? AND ?
+						    AND i.total_amount - COALESCE(p.amount_paid, 0) > 0
+						  GROUP BY i.customer_id, i.customer_display_name, i.currency
+						),
+						ranked AS (
+						  SELECT cb.*,
+						         SUM(cb.outstanding_amount) OVER (PARTITION BY cb.currency) AS currency_total
+						  FROM customer_balances cb
+						)
+						SELECT customer_id,
+						       customer_display_name,
+						       currency,
+						       outstanding_amount,
+						       currency_total
+						FROM ranked
+						ORDER BY currency, outstanding_amount DESC, customer_display_name
+						LIMIT ?
+						""",
+				(rs, rowNum) -> {
+					BigDecimal outstanding = scale(rs.getBigDecimal("outstanding_amount"));
+					BigDecimal total = scale(rs.getBigDecimal("currency_total"));
+					BigDecimal concentration = total.signum() == 0
+							? null
+							: outstanding.multiply(BigDecimal.valueOf(100))
+									.divide(total, 2, RoundingMode.HALF_UP);
+					return new CustomerOutstandingDto(
+							(UUID) rs.getObject("customer_id"),
+							rs.getString("customer_display_name"),
+							rs.getString("currency"),
+							outstanding,
+							total,
+							concentration);
+				},
+				businessId,
+				businessId,
+				Date.valueOf(from),
+				Date.valueOf(to),
+				limit);
 	}
 
 	private List<MoneyByCurrency> moneyByCurrency(String sql, UUID businessId, LocalDate from, LocalDate to) {
