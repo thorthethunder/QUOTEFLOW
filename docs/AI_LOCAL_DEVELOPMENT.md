@@ -39,8 +39,8 @@ With `AI_ENABLED=false`, Ollama need not be running. Production should keep `AI_
 | Feature | Path | Notes |
 |---------|------|--------|
 | Quote Assistant | Quotation editor → Draft with AI | Structured draft; does not persist |
-| Business Copilot | `/app/copilot` | Read-only tools + Phase 4 action proposals; see [BUSINESS_COPILOT.md](BUSINESS_COPILOT.md) |
-| Action approvals | Copilot → Review panel | Human confirm; see [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md) |
+| Business Copilot | `/app/copilot` | Read-only tools + Phase 4–5 action proposals; see [BUSINESS_COPILOT.md](BUSINESS_COPILOT.md) |
+| Action approvals | Copilot / invoice UI → Review panel | Human confirm; [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md), [AI_PAYMENT_REMINDERS.md](AI_PAYMENT_REMINDERS.md) |
 
 ## Optional Docker Compose profile
 
@@ -69,7 +69,9 @@ cd backend
 - Tool arguments are untrusted; tenant from auth context
 - Action tools prepare proposals only; confirm is a separate authenticated API (no LLM)
 - Prompts/responses not logged at INFO
-- `reminder_prepare` does not send email (Phase 5)
+- `reminder_prepare` does not send email
+- `payment_reminder_send` queues email only after human confirm → NotificationService outbox ([AI_PAYMENT_REMINDERS.md](AI_PAYMENT_REMINDERS.md))
+- External email delivery remains **at-least-once** at the provider layer
 
 ## Health
 

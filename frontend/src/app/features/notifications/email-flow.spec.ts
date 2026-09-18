@@ -284,6 +284,15 @@ describe('InvoiceDetailComponent reminder flow', () => {
   function loadInvoice(summary: PaymentSummary) {
     const fixture = TestBed.createComponent(InvoiceDetailComponent);
     fixture.detectChanges();
+    const capsReq = http.expectOne((r) => r.url.endsWith('/ai/capabilities') && r.method === 'GET');
+    capsReq.flush({
+      enabled: true,
+      quoteAssistant: false,
+      businessCopilot: false,
+      aiActions: true,
+      provider: 'NONE',
+      model: '',
+    });
     const invoiceReq = http.expectOne((r) => /\/invoices\/inv-1$/.test(r.url) && r.method === 'GET');
     const paymentsReq = http.expectOne((r) => /\/invoices\/inv-1\/payments$/.test(r.url) && r.method === 'GET');
     invoiceReq.flush({ ...invoiceFixture, paymentSummary: summary });

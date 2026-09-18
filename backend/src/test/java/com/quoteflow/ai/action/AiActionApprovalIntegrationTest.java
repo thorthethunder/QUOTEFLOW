@@ -94,9 +94,9 @@ class AiActionApprovalIntegrationTest extends PostgresIntegrationTest {
 	@Test
 	void actionToolsRegisteredWhenActionsEnabled() {
 		assertThat(toolRegistry.allowlistedNames()).contains(
-				"quotation_create_draft", "invoice_create_draft", "reminder_prepare");
+				"quotation_create_draft", "invoice_create_draft", "reminder_prepare", "payment_reminder_send");
 		assertThat(toolRegistry.allowlistedNames()).doesNotContain(
-				"confirm_action", "approve_action", "execute_action", "payment_record");
+				"confirm_action", "approve_action", "execute_action", "payment_record", "email_send");
 	}
 
 	@Test

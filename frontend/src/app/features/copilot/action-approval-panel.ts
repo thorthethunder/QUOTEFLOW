@@ -100,6 +100,15 @@ export class ActionApprovalPanelComponent implements OnInit {
 
   private mapError(err: HttpErrorResponse): string {
     const code = err.error?.code as string | undefined;
+    if (code === 'INVOICE_NOT_OUTSTANDING') {
+      return 'The invoice has been paid since this reminder was prepared. No reminder was sent.';
+    }
+    if (code === 'AI_ACTION_STALE_BALANCE') {
+      return 'The outstanding balance changed after this reminder was prepared. Please review a new reminder before sending.';
+    }
+    if (code === 'AI_ACTION_STALE_RECIPIENT') {
+      return 'The recipient email changed after this reminder was prepared. Please review a new reminder before sending.';
+    }
     if (code === 'AI_ACTION_EXPIRED' || code === 'AI_ACTION_REVALIDATION' || code === 'AI_ACTION_INTEGRITY') {
       return 'This action can no longer be completed with the reviewed details. Please prepare it again.';
     }
@@ -111,6 +120,9 @@ export class ActionApprovalPanelComponent implements OnInit {
     }
     if (code === 'AI_ACTIONS_DISABLED') {
       return 'AI-assisted actions are disabled.';
+    }
+    if (code === 'FEATURE_NOT_AVAILABLE') {
+      return 'Email sending is not available on the current plan.';
     }
     return 'Could not complete this approval. Please try again or use the normal QuoteFlow screens.';
   }

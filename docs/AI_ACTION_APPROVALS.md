@@ -25,10 +25,13 @@ The model cannot approve, confirm, or execute. There is no `confirm_action` tool
 ### READ_ONLY
 - customer_lookup, quotation_search, invoice_search, payment_status, business_summary
 
-### ACTION_REQUIRES_APPROVAL (Phase 4)
+### ACTION_REQUIRES_APPROVAL (Phase 4–5)
 - `quotation_create_draft` → `QUOTATION_CREATE_DRAFT`
 - `invoice_create_draft` → `INVOICE_CREATE_DRAFT`
 - `reminder_prepare` → `REMINDER_PREPARE` (prepare only — **does not send email**)
+- `payment_reminder_send` → `PAYMENT_REMINDER_SEND` (human-approved queue via NotificationService)
+
+See [AI_PAYMENT_REMINDERS.md](AI_PAYMENT_REMINDERS.md).
 
 ### FORBIDDEN
 - payment.record / void, refund, subscription changes, sql.execute, repository.direct, shell, filesystem, arbitrary HTTP, reminder.send, …
@@ -74,10 +77,11 @@ AI_ACTION_RATE_TENANT=20
 
 ## Reminder note
 
-Phase 4 **accepts** prepared reminder text only.  
-Phase 5 will add approved **sending** via notification/email.
+Phase 4 **accepts** prepared reminder text only (`reminder_prepare`).  
+Phase 5 adds **human-approved sending** (`payment_reminder_send`) via NotificationService/outbox — see [AI_PAYMENT_REMINDERS.md](AI_PAYMENT_REMINDERS.md).
 
 ## Related
+- [AI_PAYMENT_REMINDERS.md](AI_PAYMENT_REMINDERS.md)
 
 - [BUSINESS_COPILOT.md](BUSINESS_COPILOT.md)
 - [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md)

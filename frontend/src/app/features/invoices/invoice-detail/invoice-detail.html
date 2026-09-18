@@ -50,6 +50,14 @@
           >
             {{ reminderBusy() ? 'Sending…' : 'Send reminder' }}
           </button>
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="openPrepareAiReminder()"
+            aria-label="Prepare payment reminder with AI approval"
+          >
+            Prepare AI reminder
+          </button>
         }
         @if (inv.status === 'DRAFT' || inv.status === 'SENT') {
           <button mat-button color="warn" type="button" [disabled]="acting()" (click)="cancel()">Cancel invoice</button>

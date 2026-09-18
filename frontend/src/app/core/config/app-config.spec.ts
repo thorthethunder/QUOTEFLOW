@@ -1,6 +1,13 @@
 import { applyPublicAppConfig, getAppConfig, loadPublicAppConfig } from './app-config';
+import { environment } from '../../../environments/environment';
 
 describe('app-config', () => {
+  const originalApiBaseUrl = environment.apiBaseUrl;
+
+  afterEach(() => {
+    applyPublicAppConfig({ apiBaseUrl: originalApiBaseUrl });
+  });
+
   it('applies public apiBaseUrl without trailing slash', () => {
     applyPublicAppConfig({ apiBaseUrl: 'https://api-staging.example.com/api/v1/' });
     expect(getAppConfig().apiBaseUrl).toBe('https://api-staging.example.com/api/v1');

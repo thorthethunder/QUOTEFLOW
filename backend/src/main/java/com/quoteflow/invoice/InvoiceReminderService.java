@@ -150,8 +150,131 @@ public class InvoiceReminderService {
 		return NotificationResponse.from(notification);
 	}
 
+	/**
+	 * Phase 5: enqueue an AI-prepared payment reminder after human confirmation.
+	 * Runs in the caller's transaction (no nested @Transactional) so validation failures
+	 * can mark the proposal FAILED without poisoning commit.
+	 */
+	public NotificationResponse sendApprovedAiReminder(
+			AuthenticatedUser principal,
+			UUID proposalId,
+			com.quoteflow.ai.action.payload.PaymentReminderSendPayload reviewed) {
+		entitlementService.requireFeature(principal.getBusinessId(), FeatureKey.EMAIL_SENDING);
+
+		if (!rateLimiter.tryAcquireTenant(principal.getBusinessId())
+				|| !rateLimiter.tryAcquireDocument(principal.getBusinessId(), "INVOICE", reviewed.invoiceId())) {
+			throw new DomainApiException(
+					HttpStatus.TOO_MANY_REQUESTS,
+					"RATE_LIMITED",
+					"Too many email requests. Try again shortly.");
+		}
+
+		Invoice invoice = invoiceRepository
+				.findDetailByIdAndBusinessId(reviewed.invoiceId(), principal.getBusinessId())
+				.orElseThrow(() -> new DomainApiException(HttpStatus.NOT_FOUND, "NOT_FOUND", "Invoice not found"));
+
+		if (invoice.getStatus() == InvoiceStatus.CANCELLED) {
+			throw new DomainApiException(HttpStatus.CONFLICT, "INVALID_STATUS",
+					"Cancelled invoices cannot receive reminders");
+		}
+		if (invoice.getStatus() != InvoiceStatus.SENT) {
+			throw new DomainApiException(HttpStatus.CONFLICT, "INVALID_STATUS",
+					"Only sent invoices can receive reminders");
+		}
+
+		PaymentSummaryResponse summary = paymentService.summaryForInvoice(invoice, principal.getBusinessId());
+		if (summary.balanceDue() == null || summary.balanceDue().compareTo(BigDecimal.ZERO) <= 0) {
+			throw new DomainApiException(
+					HttpStatus.CONFLICT,
+					"INVOICE_NOT_OUTSTANDING",
+					"The invoice has been paid since this reminder was prepared. No reminder was sent.");
+		}
+		if (summary.balanceDue().compareTo(reviewed.outstandingAmount()) != 0) {
+			throw new DomainApiException(
+					HttpStatus.CONFLICT,
+					"AI_ACTION_STALE_BALANCE",
+					"The outstanding balance changed after this reminder was prepared. "
+							+ "Please review a new reminder before sending.");
+		}
+		if (!invoice.getCurrency().equalsIgnoreCase(reviewed.currency())) {
+			throw new DomainApiException(
+					HttpStatus.CONFLICT,
+					"AI_ACTION_STALE_CURRENCY",
+					"Invoice currency changed after this reminder was prepared. Please prepare it again.");
+		}
+
+		String currentRecipient = EmailAddressValidator.requireValid(
+				EmailNormalizer.normalize(invoice.getCustomerEmail()));
+		if (currentRecipient == null) {
+			throw new DomainApiException(
+					HttpStatus.BAD_REQUEST,
+					"RECIPIENT_EMAIL_MISSING",
+					"No email address is available for this customer.");
+		}
+		if (!currentRecipient.equalsIgnoreCase(reviewed.recipientEmail())) {
+			throw new DomainApiException(
+					HttpStatus.CONFLICT,
+					"AI_ACTION_STALE_RECIPIENT",
+					"The recipient email changed after this reminder was prepared. "
+							+ "Please review a new reminder before sending.");
+		}
+
+		String customMessage = sanitizeAiMessage(reviewed.bodyPlainText());
+		String subject = EmailTemplateRenderer.sanitizeSubject(reviewed.subject());
+		if (subject.isBlank()) {
+			throw new DomainApiException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Subject is required");
+		}
+
+		Map<String, String> vars = new LinkedHashMap<>();
+		vars.put("businessName", nullToEmpty(invoice.getBusinessName()));
+		vars.put("customerName", nullToEmpty(invoice.getCustomerDisplayName()));
+		vars.put("documentNumber", invoice.getInvoiceNumber());
+		vars.put("balanceDisplay", formatMoney(summary.balanceDue(), invoice.getCurrency()));
+		vars.put("customMessage", customMessage);
+		vars.put("currency", invoice.getCurrency());
+
+		String replyTo = EmailAddressValidator.requireValid(
+				EmailNormalizer.normalize(invoice.getBusinessEmail()));
+
+		String idempotencyKey = "AI_ACTION:" + proposalId;
+
+		Notification notification = notificationService.enqueue(new NotificationService.EnqueueCommand(
+				principal.getBusinessId(),
+				NotificationType.INVOICE_REMINDER,
+				currentRecipient,
+				invoice.getCustomerDisplayName(),
+				subject,
+				"invoice_reminder_standard",
+				vars,
+				NotificationReferenceType.INVOICE,
+				reviewed.invoiceId(),
+				replyTo,
+				false,
+				idempotencyKey,
+				false));
+
+		log.info("reminder.ai.email.queued invoiceId={} proposalId={} notificationId={}",
+				reviewed.invoiceId(), proposalId, notification.getId());
+		return NotificationResponse.from(notification);
+	}
+
 	public void dispatchNow(UUID notificationId) {
 		deliveryService.deliverClaimedOrPending(notificationId);
+	}
+
+	private String sanitizeAiMessage(String message) {
+		if (message == null) {
+			return "";
+		}
+		String trimmed = message.replace("\r", "").trim();
+		int max = Math.max(emailProperties.getMaxCustomMessageLength(), 2000);
+		if (trimmed.length() > max) {
+			throw new DomainApiException(
+					HttpStatus.BAD_REQUEST,
+					"VALIDATION_ERROR",
+					"Message must be at most " + max + " characters");
+		}
+		return trimmed;
 	}
 
 	private String sanitizeMessage(String message) {

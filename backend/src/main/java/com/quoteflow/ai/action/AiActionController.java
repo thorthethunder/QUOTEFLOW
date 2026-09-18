@@ -2,12 +2,16 @@ package com.quoteflow.ai.action;
 
 import com.quoteflow.ai.action.dto.ActionConfirmResponse;
 import com.quoteflow.ai.action.dto.ActionProposalDetailDto;
+import com.quoteflow.ai.action.dto.ActionProposalSummaryDto;
+import com.quoteflow.ai.action.dto.PreparePaymentReminderRequest;
 import com.quoteflow.security.AuthenticatedUser;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,6 +25,14 @@ public class AiActionController {
 
 	public AiActionController(AiActionApprovalService approvalService) {
 		this.approvalService = approvalService;
+	}
+
+	@PostMapping(path = "/payment-reminders/prepare", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ActionProposalSummaryDto preparePaymentReminder(
+			@AuthenticationPrincipal AuthenticatedUser principal,
+			@Valid @RequestBody PreparePaymentReminderRequest request) {
+		return approvalService.preparePaymentReminderSend(
+				principal, request.invoiceId(), request.subject(), request.bodyPlainText());
 	}
 
 	@GetMapping("/{proposalId}")

@@ -52,11 +52,12 @@ The model is **never** authorization.
 
 **READ_ONLY** (executable now): tools above.
 
-**ACTION_REQUIRES_APPROVAL** (Phase 4 — prepare only, human confirm required):
+**ACTION_REQUIRES_APPROVAL** (Phase 4–5 — prepare only, human confirm required):
 
-- `quotation_create_draft`, `invoice_create_draft`, `reminder_prepare` (no email send)
+- `quotation_create_draft`, `invoice_create_draft`, `reminder_prepare` (no email)
+- `payment_reminder_send` (human-approved email queue)
 
-See [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md).
+See [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md) and [AI_PAYMENT_REMINDERS.md](AI_PAYMENT_REMINDERS.md).
 
 **FORBIDDEN** (never register):
 

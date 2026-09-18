@@ -26,7 +26,7 @@
 | Platform billing vs tenant payments | Separation **enforced** ([ADR-004](adr/ADR-004-platform-billing-vs-tenant-payments.md)); SaaS charges never in `payments` |
 | Grafana / Prometheus stack | **FUTURE** — Actuator only for now |
 | Redis / Kafka / microservices | **FUTURE** — do not deploy prematurely |
-| AI providers (Ollama + Spring AI) | **AI Phase 4** — Quote Assistant + Copilot + controlled actions (human approval) — [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md) |
+| AI providers (Ollama + Spring AI) | **AI Phase 5** — Quote Assistant + Copilot + approved actions + payment reminders — [AI_PAYMENT_REMINDERS.md](AI_PAYMENT_REMINDERS.md) |
 
 **Principle:** Design for scale. Deploy for current scale.
 

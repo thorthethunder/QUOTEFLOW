@@ -5,26 +5,34 @@ import com.quoteflow.ai.action.dto.ActionConfirmResponse;
 import com.quoteflow.ai.action.dto.ActionProposalDetailDto;
 import com.quoteflow.ai.action.dto.ActionProposalSummaryDto;
 import com.quoteflow.ai.action.payload.InvoiceCreateDraftPayload;
+import com.quoteflow.ai.action.payload.PaymentReminderSendPayload;
 import com.quoteflow.ai.action.payload.QuotationCreateDraftPayload;
 import com.quoteflow.ai.action.payload.ReminderPreparePayload;
 import com.quoteflow.ai.config.AiProperties;
+import com.quoteflow.common.EmailNormalizer;
 import com.quoteflow.common.api.DomainApiException;
 import com.quoteflow.customer.CustomerStatus;
 import com.quoteflow.customer.CustomerService;
 import com.quoteflow.customer.dto.CustomerResponse;
 import com.quoteflow.finance.DiscountType;
 import com.quoteflow.finance.FinancialDocumentCalculator;
+import com.quoteflow.invoice.InvoiceReminderService;
 import com.quoteflow.invoice.InvoiceService;
 import com.quoteflow.invoice.InvoiceStatus;
 import com.quoteflow.invoice.dto.CreateInvoiceRequest;
 import com.quoteflow.invoice.dto.InvoiceItemRequest;
 import com.quoteflow.invoice.dto.InvoiceResponse;
+import com.quoteflow.notification.NotificationResponse;
+import com.quoteflow.notification.email.EmailAddressValidator;
+import com.quoteflow.notification.email.template.EmailTemplateRenderer;
 import com.quoteflow.payment.dto.PaymentSummaryResponse;
 import com.quoteflow.quotation.QuotationService;
 import com.quoteflow.quotation.dto.CreateQuotationRequest;
 import com.quoteflow.quotation.dto.QuotationItemRequest;
 import com.quoteflow.quotation.dto.QuotationResponse;
 import com.quoteflow.security.AuthenticatedUser;
+import com.quoteflow.subscription.EntitlementService;
+import com.quoteflow.subscription.FeatureKey;
 import org.springframework.http.HttpStatus;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -40,9 +48,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 public class AiActionApprovalService {
+
+	private static final Pattern UNSUPPORTED_CLAIM = Pattern.compile(
+			"(?i)\\b(legal action|lawsuit|credit score|credit report|late fee|penalty|interest charge|"
+					+ "collection agency|bailiff|court summons|20\\s*%|10\\s*%\\s*penalty)\\b");
 
 	private final AiActionProposalRepository proposalRepository;
 	private final AiActionIntegrityService integrityService;
@@ -52,6 +65,8 @@ public class AiActionApprovalService {
 	private final QuotationService quotationService;
 	private final InvoiceService invoiceService;
 	private final CustomerService customerService;
+	private final InvoiceReminderService invoiceReminderService;
+	private final EntitlementService entitlementService;
 	private final TransactionTemplate transactionTemplate;
 
 	public AiActionApprovalService(
@@ -63,6 +78,8 @@ public class AiActionApprovalService {
 			QuotationService quotationService,
 			InvoiceService invoiceService,
 			CustomerService customerService,
+			InvoiceReminderService invoiceReminderService,
+			EntitlementService entitlementService,
 			TransactionTemplate transactionTemplate) {
 		this.proposalRepository = proposalRepository;
 		this.integrityService = integrityService;
@@ -72,6 +89,8 @@ public class AiActionApprovalService {
 		this.quotationService = quotationService;
 		this.invoiceService = invoiceService;
 		this.customerService = customerService;
+		this.invoiceReminderService = invoiceReminderService;
+		this.entitlementService = entitlementService;
 		this.transactionTemplate = transactionTemplate;
 	}
 
@@ -184,6 +203,69 @@ public class AiActionApprovalService {
 	}
 
 	@Transactional
+	public ActionProposalSummaryDto preparePaymentReminderSend(
+			AuthenticatedUser principal, UUID invoiceId, String subject, String bodyPlainText) {
+		requireActionsEnabled();
+		entitlementService.requireFeature(principal.getBusinessId(), FeatureKey.EMAIL_SENDING);
+
+		InvoiceResponse invoice = invoiceService.get(principal, invoiceId);
+		if (invoice.status() != InvoiceStatus.SENT) {
+			throw new DomainApiException(HttpStatus.CONFLICT, "INVALID_STATUS",
+					"Only sent invoices can receive payment reminders");
+		}
+		PaymentSummaryResponse summary = invoice.paymentSummary();
+		if (summary == null || summary.balanceDue() == null || summary.balanceDue().compareTo(BigDecimal.ZERO) <= 0) {
+			throw new DomainApiException(HttpStatus.CONFLICT, "INVOICE_NOT_OUTSTANDING",
+					"Invoice has no outstanding balance");
+		}
+
+		String recipient = EmailAddressValidator.requireValid(
+				EmailNormalizer.normalize(invoice.customerEmail()));
+		if (recipient == null) {
+			throw new DomainApiException(HttpStatus.BAD_REQUEST, "RECIPIENT_EMAIL_MISSING",
+					"No email address is available for this customer.");
+		}
+
+		String safeSubject = EmailTemplateRenderer.sanitizeSubject(
+				boundText(subject, 200, "Payment reminder for " + invoice.invoiceNumber()));
+		String safeBody = boundText(bodyPlainText, 2000, "");
+		if (!StringUtils.hasText(safeSubject) || !StringUtils.hasText(safeBody)) {
+			throw new DomainApiException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR",
+					"Subject and body are required");
+		}
+		rejectUnsupportedClaims(safeSubject + "\n" + safeBody);
+
+		PaymentReminderSendPayload payload = new PaymentReminderSendPayload(
+				invoice.id(),
+				invoice.customerId(),
+				invoice.invoiceNumber(),
+				invoice.customerDisplayName(),
+				recipient,
+				invoice.currency(),
+				summary.balanceDue(),
+				summary.paymentState() == null ? null : summary.paymentState().name(),
+				safeSubject,
+				safeBody);
+
+		Map<String, Object> preview = new LinkedHashMap<>();
+		preview.put("invoiceNumber", invoice.invoiceNumber());
+		preview.put("customerDisplayName", invoice.customerDisplayName());
+		preview.put("recipientEmail", recipient);
+		preview.put("balanceDue", summary.balanceDue().toPlainString());
+		preview.put("currency", invoice.currency());
+		preview.put("paymentState", summary.paymentState() == null ? null : summary.paymentState().name());
+		preview.put("sendsEmail", true);
+		preview.put("note", "Confirmation queues a payment reminder email via NotificationService. Delivery is asynchronous.");
+
+		return persist(
+				principal,
+				AiActionType.PAYMENT_REMINDER_SEND,
+				payload,
+				"Send payment reminder for " + invoice.invoiceNumber() + " to " + maskEmail(recipient),
+				preview);
+	}
+
+	@Transactional
 	public ActionProposalDetailDto get(AuthenticatedUser principal, UUID proposalId) {
 		AiActionProposal proposal = loadVisible(principal, proposalId);
 		expireIfNeeded(proposal);
@@ -204,6 +286,9 @@ public class AiActionApprovalService {
 		if (outcome == null || outcome.expired()) {
 			throw new DomainApiException(HttpStatus.CONFLICT, "AI_ACTION_EXPIRED",
 					"This action can no longer be completed with the reviewed details. Please prepare it again.");
+		}
+		if (outcome.stale()) {
+			throw new DomainApiException(HttpStatus.CONFLICT, outcome.staleCode(), outcome.staleMessage());
 		}
 		return outcome.response();
 	}
@@ -257,6 +342,13 @@ public class AiActionApprovalService {
 					result.id(),
 					result.message()));
 		} catch (DomainApiException ex) {
+			if (isStaleSendFailure(proposal.getActionType(), ex.getCode())) {
+				proposal.markFailed(ex.getCode());
+				proposalRepository.save(proposal);
+				auditRecorder.record("CONFIRM_REJECTED_STALE", proposal.getId(), proposal.getActionType(),
+						principal.getBusinessId(), principal.getUserId(), ex.getCode());
+				return ConfirmOutcome.stale(ex.getCode(), ex.getMessage());
+			}
 			auditRecorder.record("CONFIRM_FAILED", proposal.getId(), proposal.getActionType(),
 					principal.getBusinessId(), principal.getUserId(), ex.getCode());
 			throw new DomainApiException(HttpStatus.CONFLICT, "AI_ACTION_REVALIDATION",
@@ -344,6 +436,15 @@ public class AiActionApprovalService {
 				yield new ExecutionResult("REMINDER_PREPARED", payload.invoiceId(),
 						"Prepared reminder accepted for " + payload.invoiceNumber()
 								+ ". Email was not sent.");
+			}
+			case PAYMENT_REMINDER_SEND -> {
+				PaymentReminderSendPayload payload = read(proposal, PaymentReminderSendPayload.class);
+				NotificationResponse queued = invoiceReminderService.sendApprovedAiReminder(
+						principal, proposal.getId(), payload);
+				auditRecorder.record("REMINDER_ENQUEUED", proposal.getId(), proposal.getActionType(),
+						principal.getBusinessId(), principal.getUserId(), "NOTIFICATION");
+				yield new ExecutionResult("NOTIFICATION", queued.id(),
+						"Payment reminder queued for delivery to " + maskEmail(payload.recipientEmail()) + ".");
 			}
 		};
 	}
@@ -442,7 +543,45 @@ public class AiActionApprovalService {
 			case QUOTATION_CREATE_DRAFT -> "Create Draft Quotation";
 			case INVOICE_CREATE_DRAFT -> "Create Draft Invoice";
 			case REMINDER_PREPARE -> "Accept Prepared Reminder";
+			case PAYMENT_REMINDER_SEND -> "Approve & Send Reminder";
 		};
+	}
+
+	private static boolean isStaleSendFailure(AiActionType type, String code) {
+		if (type != AiActionType.PAYMENT_REMINDER_SEND || code == null) {
+			return false;
+		}
+		return switch (code) {
+			case "INVOICE_NOT_OUTSTANDING",
+					"AI_ACTION_STALE_BALANCE",
+					"AI_ACTION_STALE_RECIPIENT",
+					"AI_ACTION_STALE_CURRENCY",
+					"RECIPIENT_EMAIL_MISSING",
+					"INVALID_STATUS",
+					"FEATURE_NOT_AVAILABLE" -> true;
+			default -> false;
+		};
+	}
+
+	private static void rejectUnsupportedClaims(String text) {
+		if (UNSUPPORTED_CLAIM.matcher(text).find()) {
+			throw new DomainApiException(HttpStatus.BAD_REQUEST, "UNSUPPORTED_REMINDER_CLAIM",
+					"Reminder text must stay factual and polite. Do not invent late fees, penalties, "
+							+ "legal threats, or credit consequences.");
+		}
+	}
+
+	private static String maskEmail(String email) {
+		if (!StringUtils.hasText(email) || !email.contains("@")) {
+			return "***";
+		}
+		int at = email.indexOf('@');
+		String local = email.substring(0, at);
+		String domain = email.substring(at);
+		if (local.length() <= 1) {
+			return "*" + domain;
+		}
+		return local.charAt(0) + "***" + domain;
 	}
 
 	private <T> T read(AiActionProposal proposal, Class<T> type) {
@@ -576,13 +715,22 @@ public class AiActionApprovalService {
 	private record ExecutionResult(String type, UUID id, String message) {
 	}
 
-	private record ConfirmOutcome(boolean expired, ActionConfirmResponse response) {
+	private record ConfirmOutcome(
+			boolean expired,
+			boolean stale,
+			String staleCode,
+			String staleMessage,
+			ActionConfirmResponse response) {
 		static ConfirmOutcome ofExpired() {
-			return new ConfirmOutcome(true, null);
+			return new ConfirmOutcome(true, false, null, null, null);
+		}
+
+		static ConfirmOutcome stale(String code, String message) {
+			return new ConfirmOutcome(false, true, code, message, null);
 		}
 
 		static ConfirmOutcome ok(ActionConfirmResponse response) {
-			return new ConfirmOutcome(false, response);
+			return new ConfirmOutcome(false, false, null, null, response);
 		}
 	}
 }

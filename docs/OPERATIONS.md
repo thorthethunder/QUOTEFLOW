@@ -10,6 +10,7 @@
 - Production profile: `health` only, `show-details: never`
 - **Phase 12 platform billing ops** — see [BILLING.md](BILLING.md) for Razorpay Test/Live setup, webhook endpoint, env vars (`BILLING_ENABLED`, plan IDs, secrets)
 - **Phase 13 email ops** — see [EMAIL.md](EMAIL.md): `EMAIL_PROVIDER`, `EMAIL_FROM`, optional `RESEND_API_KEY`, domain SPF/DKIM/DMARC before production send
+- **AI Phase 5 payment reminders** — [AI_PAYMENT_REMINDERS.md](AI_PAYMENT_REMINDERS.md): human-approved send via durable outbox; local enqueue idempotent per proposal; external provider remains **at-least-once**
 - **Phase 14 security ops** — correlation IDs in logs; [INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md); [SECURITY_TEST_MATRIX.md](SECURITY_TEST_MATRIX.md)
 
 ## Backup / restore readiness (targets, not guarantees)

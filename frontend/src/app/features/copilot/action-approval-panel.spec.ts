@@ -92,4 +92,37 @@ describe('ActionApprovalPanelComponent', () => {
     expect(fixture.nativeElement.querySelector('pre img')).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Email will not be sent');
   });
+
+  it('renders payment reminder send details and approve label', () => {
+    fixture.componentRef.setInput('summary', {
+      ...summary,
+      actionType: 'PAYMENT_REMINDER_SEND',
+      confirmButtonLabel: 'Approve & Send Reminder',
+      summary: 'Send payment reminder for INV-0015',
+    });
+    fixture.detectChanges();
+    http.expectOne((r) => r.url.includes('/ai/actions/')).flush({
+      ...summary,
+      actionType: 'PAYMENT_REMINDER_SEND',
+      confirmButtonLabel: 'Approve & Send Reminder',
+      createdAt: new Date().toISOString(),
+      payload: {
+        invoiceNumber: 'INV-0015',
+        customerDisplayName: 'Raj Electrical',
+        recipientEmail: 'buyer@example.com',
+        currency: 'INR',
+        outstandingAmount: '1000.00',
+        paymentState: 'UNPAID',
+        subject: 'Payment reminder',
+        bodyPlainText: 'Please pay when convenient.',
+      },
+      preview: { sendsEmail: true },
+      resultReferenceType: null,
+      resultReferenceId: null,
+    });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('buyer@example.com');
+    expect(fixture.nativeElement.textContent).toContain('Approve & Send Reminder');
+    expect(fixture.nativeElement.textContent).toContain('queued');
+  });
 });

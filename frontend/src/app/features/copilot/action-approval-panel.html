@@ -25,11 +25,20 @@
       @if (d.payload['customerDisplayName']; as name) {
         <div class="row"><span>Customer</span><strong>{{ name }}</strong></div>
       }
+      @if (d.payload['recipientEmail']; as recipient) {
+        <div class="row"><span>Recipient</span><strong>{{ recipient }}</strong></div>
+      }
       @if (d.payload['currency']; as currency) {
         <div class="row"><span>Currency</span><strong>{{ currency }}</strong></div>
       }
       @if (d.payload['invoiceNumber']; as inv) {
         <div class="row"><span>Invoice</span><strong>{{ inv }}</strong></div>
+      }
+      @if (d.payload['paymentState']; as state) {
+        <div class="row"><span>Payment state</span><strong>{{ state }}</strong></div>
+      }
+      @if (d.payload['outstandingAmount'] != null) {
+        <div class="row"><span>Outstanding</span><strong>{{ d.payload['currency'] }} {{ d.payload['outstandingAmount'] }}</strong></div>
       }
       @if (d.payload['balanceDue'] != null) {
         <div class="row"><span>Balance due</span><strong>{{ d.payload['currency'] }} {{ d.payload['balanceDue'] }}</strong></div>
@@ -39,7 +48,7 @@
       }
       @if (d.payload['bodyPlainText']; as body) {
         <div class="block">
-          <span>Prepared reminder (plain text)</span>
+          <span>{{ d.preview['sendsEmail'] === true ? 'Message (plain text)' : 'Prepared reminder (plain text)' }}</span>
           <pre>{{ body }}</pre>
         </div>
       }
@@ -68,6 +77,9 @@
 
       @if (d.preview['sendsEmail'] === false) {
         <p class="note">Email will not be sent. Accepting only stores this prepared reminder for review.</p>
+      }
+      @if (d.preview['sendsEmail'] === true) {
+        <p class="note">Approving queues a payment reminder email. Delivery is asynchronous (queued, not instant delivery).</p>
       }
     </div>
 

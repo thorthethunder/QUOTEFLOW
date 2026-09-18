@@ -80,6 +80,7 @@ class NotificationIntegrationTest extends PostgresIntegrationTest {
 		jdbcTemplate.update("DELETE FROM document_sequences");
 		jdbcTemplate.update("DELETE FROM customers");
 		jdbcTemplate.update("DELETE FROM refresh_tokens");
+		jdbcTemplate.update("DELETE FROM ai_action_proposals");
 		jdbcTemplate.update("DELETE FROM app_users");
 		jdbcTemplate.update("DELETE FROM subscriptions");
 		jdbcTemplate.update("DELETE FROM businesses");

@@ -104,9 +104,9 @@ Local Ollama: provider API monetary cost is typically zero; **compute/infrastruc
 | **AI Phase 1** | Provider foundation + Ollama + qwen3:8b local | **CLOSED PASS** |
 | **AI Phase 2** | Quote Assistant + Spring AI | **CLOSED PASS** |
 | **AI Phase 3** | Read-only Business Copilot | **CLOSED PASS** |
-| **AI Phase 4** | Controlled action tools + human approval | **THIS PHASE** |
-| **AI Phase 5** | Payment Reminder Assistant + approved sending | NEXT |
-| **AI Phase 6** | Reporting insights | Planned |
+| **AI Phase 4** | Controlled action tools + human approval | **CLOSED PASS** |
+| **AI Phase 5** | Payment Reminder Assistant + approved sending | **CLOSED PASS** |
+| **AI Phase 6** | Reporting insights | NEXT |
 | **AI Phase 7** | Tenant-isolated RAG | Planned |
 | **AI Phase 8** | Agent workflows | Planned |
 | **AI Phase 9** | Usage / cost / entitlements | Planned |

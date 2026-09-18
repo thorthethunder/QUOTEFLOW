@@ -75,4 +75,12 @@ export class BusinessCopilotApiService {
   cancelProposal(proposalId: string): Observable<ActionProposalDetail> {
     return this.http.post<ActionProposalDetail>(`${this.base}/actions/${proposalId}/cancel`, {});
   }
+
+  preparePaymentReminder(input: {
+    invoiceId: string;
+    subject: string;
+    bodyPlainText: string;
+  }): Observable<ActionProposalSummary> {
+    return this.http.post<ActionProposalSummary>(`${this.base}/actions/payment-reminders/prepare`, input);
+  }
 }

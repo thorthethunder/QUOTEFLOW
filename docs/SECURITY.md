@@ -23,6 +23,7 @@
 | AI Quote Assistant | **IMPLEMENTED** (AI Phase 2) — [QUOTE_ASSISTANT.md](QUOTE_ASSISTANT.md); AI_ENABLED=false by default |
 | AI Business Copilot | **IMPLEMENTED** (AI Phase 3) — read-only tools; [BUSINESS_COPILOT.md](BUSINESS_COPILOT.md) |
 | AI controlled actions | **IMPLEMENTED** (AI Phase 4) — proposal → human confirm; [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md); AI_ACTIONS_ENABLED=false by default |
+| AI payment reminders | **IMPLEMENTED** (AI Phase 5) — recipient/payment authority + approved outbox send; [AI_PAYMENT_REMINDERS.md](AI_PAYMENT_REMINDERS.md) |
 
 ## IMPLEMENTED (Phase 1–3)
 

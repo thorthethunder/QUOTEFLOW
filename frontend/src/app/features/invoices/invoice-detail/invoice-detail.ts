@@ -24,7 +24,10 @@ import { VoidPaymentDialog } from '../../payments/void-payment-dialog';
 import { InvoiceApiService } from '../invoice-api.service';
 import { Invoice } from '../invoice.models';
 import { ConfirmInvoiceActionDialog } from './confirm-invoice-action-dialog';
+import { PrepareAiReminderDialog } from './prepare-ai-reminder-dialog';
 import { SendReminderDialog } from './send-reminder-dialog';
+import { BusinessCopilotApiService } from '../../copilot/business-copilot-api.service';
+import { ActionConfirmResponse } from '../../copilot/business-copilot-api.service';
 
 @Component({
   selector: 'app-invoice-detail',
@@ -46,12 +49,14 @@ export class InvoiceDetailComponent implements OnInit {
   private readonly paymentsApi = inject(PaymentApiService);
   private readonly notificationApi = inject(NotificationApiService);
   private readonly entitlements = inject(EntitlementStore);
+  private readonly copilotApi = inject(BusinessCopilotApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly dialog = inject(MatDialog);
 
   readonly loading = signal(true);
   readonly acting = signal(false);
   readonly reminderBusy = signal(false);
+  readonly aiActionsEnabled = signal(false);
   readonly downloadingReceiptId = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly paymentError = signal<string | null>(null);
@@ -90,6 +95,10 @@ export class InvoiceDetailComponent implements OnInit {
       return;
     }
     this.entitlements.refresh().subscribe();
+    this.copilotApi.capabilities().subscribe({
+      next: (caps) => this.aiActionsEnabled.set(!!caps.aiActions),
+      error: () => this.aiActionsEnabled.set(false),
+    });
     this.load(id);
   }
 
@@ -101,6 +110,39 @@ export class InvoiceDetailComponent implements OnInit {
 
   canSendReminder(): boolean {
     return this.canRecordPayment();
+  }
+
+  openPrepareAiReminder(): void {
+    const inv = this.invoice();
+    const summary = this.paymentSummary() ?? inv?.paymentSummary;
+    if (!inv || !summary || !this.canSendReminder()) {
+      return;
+    }
+    const ref = this.dialog.open(PrepareAiReminderDialog, {
+      width: 'min(36rem, 96vw)',
+      autoFocus: 'first-tabbable',
+      restoreFocus: true,
+      data: {
+        invoiceId: inv.id,
+        invoiceNumber: inv.invoiceNumber,
+        recipientEmail: inv.customerEmail,
+        balanceDue: summary.balanceDue,
+        currency: inv.currency,
+        customerDisplayName: inv.customerDisplayName,
+        aiActionsEnabled: this.aiActionsEnabled(),
+        emailSendingEnabled: this.entitlements.canSendEmail(),
+      },
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (!result) {
+        return;
+      }
+      const confirmed = result as ActionConfirmResponse;
+      this.reminderMessage.set(confirmed.message || 'Payment reminder queued for delivery.');
+      this.notificationApi.listInvoiceNotifications(inv.id).subscribe({
+        next: (items) => this.notifications.set(items),
+      });
+    });
   }
 
   openSendReminder(): void {
