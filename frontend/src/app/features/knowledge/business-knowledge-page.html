@@ -1,0 +1,115 @@
+<section class="knowledge-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Business Knowledge</p>
+      <h1>Tenant-owned answers</h1>
+    </div>
+    <button mat-stroked-button type="button" (click)="load()" [disabled]="loading()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </header>
+
+  @if (error()) {
+    <div class="error" role="alert">{{ error() }}</div>
+  }
+
+  <div class="knowledge-grid">
+    <section class="panel ingest-panel">
+      <h2>Add text</h2>
+      <label>
+        Title
+        <input [formControl]="title" maxlength="140" />
+      </label>
+      <label>
+        Knowledge text
+        <textarea [formControl]="text" rows="8"></textarea>
+      </label>
+      <button mat-flat-button color="primary" type="button" (click)="addText()" [disabled]="saving()">
+        <mat-icon>add</mat-icon>
+        Add knowledge
+      </button>
+
+      <div class="upload">
+        <h3>Upload TXT</h3>
+        <label>
+          Optional title
+          <input [formControl]="uploadTitle" maxlength="140" />
+        </label>
+        <input type="file" accept="text/plain,.txt" (change)="chooseFile($event)" />
+        <button mat-stroked-button type="button" (click)="upload()" [disabled]="saving() || !selectedFile()">
+          <mat-icon>upload_file</mat-icon>
+          Upload
+        </button>
+      </div>
+    </section>
+
+    <section class="panel ask-panel">
+      <h2>Ask knowledge</h2>
+      <label>
+        Question
+        <textarea [formControl]="question" rows="4" maxlength="1000"></textarea>
+      </label>
+      <button mat-flat-button color="primary" type="button" (click)="ask()" [disabled]="asking()">
+        <mat-icon>search</mat-icon>
+        Ask
+      </button>
+
+      @if (asking()) {
+        <div class="loading"><mat-spinner diameter="24"></mat-spinner></div>
+      }
+
+      @if (answer(); as result) {
+        <article class="answer" [class.no-answer]="!result.grounded">
+          <div class="answer-flags">
+            <span>{{ result.grounded ? 'Grounded' : 'No supporting knowledge' }}</span>
+            @if (!result.aiNarrativeAvailable) {
+              <span>AI fallback</span>
+            }
+          </div>
+          <p>{{ result.answer }}</p>
+          @if (result.sources.length) {
+            <h3>Sources</h3>
+            @for (source of result.sources; track source.chunkId) {
+              <div class="source">
+                <strong>{{ source.title }}</strong>
+                <span>Chunk {{ source.chunkIndex + 1 }} · {{ source.score | number: '1.2-2' }}</span>
+                <p>{{ source.excerpt }}</p>
+              </div>
+            }
+          }
+        </article>
+      }
+    </section>
+  </div>
+
+  <section class="panel documents">
+    <div class="documents-header">
+      <h2>Documents</h2>
+      <span>{{ readyCount() }} ready</span>
+    </div>
+
+    @if (loading()) {
+      <div class="loading"><mat-spinner diameter="24"></mat-spinner></div>
+    } @else if (!documents().length) {
+      <p class="empty">No business knowledge has been indexed yet.</p>
+    } @else {
+      <div class="document-list">
+        @for (doc of documents(); track doc.id) {
+          <article class="document-row">
+            <div>
+              <h3>{{ doc.title }}</h3>
+              <p>{{ doc.sourceType }} · {{ doc.status }} · v{{ doc.version }}</p>
+              @if (doc.originalFilename) {
+                <p>{{ doc.originalFilename }}</p>
+              }
+            </div>
+            <button mat-icon-button type="button" (click)="delete(doc)" matTooltip="Delete knowledge">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</section>

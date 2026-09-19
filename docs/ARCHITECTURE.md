@@ -186,3 +186,9 @@ Early MVP fixed-cost target ~₹1,500–₹3,000/month before variable AI/paymen
 ## Reusable SaaS platform intent
 
 QuoteFlow is product #1. Keep platform capabilities (auth, tenancy, billing, entitlements, notifications, AI orchestration, audit, storage, platform admin, FinOps) separable from QuoteFlow-only domain logic.
+
+## AI Phase 7 business knowledge architecture
+
+Business Knowledge stores tenant-owned text/TXT policy knowledge in PostgreSQL and performs tenant-filtered retrieval in SQL before optional AI narration. The model receives only the authenticated tenant's bounded chunks and has no action tools.
+
+See [AI_BUSINESS_KNOWLEDGE.md](AI_BUSINESS_KNOWLEDGE.md).

@@ -152,3 +152,11 @@ AI_REPORTING_INSIGHTS_RATE_TENANT=20
 
 Do not log prompts, full datasets, customer notes, or invoice text. Usage telemetry records feature, provider/model,
 latency, success/failure, and tenant/user presence only.
+
+## AI business knowledge operations
+
+Business Knowledge is disabled by default with `AI_KNOWLEDGE_ENABLED=false`.
+
+PostgreSQL stores document/chunk rows and embeddings; no object storage is required for Phase 7 TXT/text ingestion.
+Use `OLLAMA_EMBEDDING_MODEL` and `AI_KNOWLEDGE_EMBEDDING_DIMENSION` as a compatibility pair. Changing either requires
+re-indexing tenant knowledge. See [AI_BUSINESS_KNOWLEDGE.md](AI_BUSINESS_KNOWLEDGE.md).

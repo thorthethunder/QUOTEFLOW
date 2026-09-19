@@ -130,6 +130,20 @@ quoteflow:
       max-outstanding-rows: ${AI_REPORTING_INSIGHTS_MAX_OUTSTANDING_ROWS:5}
       per-user-per-minute: ${AI_REPORTING_INSIGHTS_RATE_USER:6}
       per-tenant-per-minute: ${AI_REPORTING_INSIGHTS_RATE_TENANT:20}
+    knowledge:
+      enabled: ${AI_KNOWLEDGE_ENABLED:false}
+      embedding-provider: ${AI_EMBEDDING_PROVIDER:OLLAMA}
+      embedding-model: ${OLLAMA_EMBEDDING_MODEL:mxbai-embed-large}
+      embedding-dimension: ${AI_KNOWLEDGE_EMBEDDING_DIMENSION:1024}
+      max-file-bytes: ${AI_KNOWLEDGE_MAX_FILE_SIZE:500000}
+      max-text-chars: ${AI_KNOWLEDGE_MAX_TEXT_CHARS:80000}
+      max-chunks-per-document: ${AI_KNOWLEDGE_MAX_CHUNKS:60}
+      chunk-size: ${AI_KNOWLEDGE_CHUNK_SIZE:900}
+      chunk-overlap: ${AI_KNOWLEDGE_CHUNK_OVERLAP:120}
+      top-k: ${AI_KNOWLEDGE_TOP_K:5}
+      relevance-threshold: ${AI_KNOWLEDGE_RELEVANCE_THRESHOLD:0.55}
+      query-per-user-per-minute: ${AI_KNOWLEDGE_QUERY_RATE_USER:10}
+      query-per-tenant-per-minute: ${AI_KNOWLEDGE_QUERY_RATE_TENANT:30}
     actions:
       # Separate from AI_ENABLED. Production should stay false until validated.
       enabled: ${AI_ACTIONS_ENABLED:false}

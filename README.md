@@ -134,6 +134,7 @@ cd frontend && npm ci && npm run build
 - [Documents architecture (future types)](docs/DOCUMENTS_ARCHITECTURE.md)
 - [AI architecture](docs/AI_ARCHITECTURE.md)
 - [AI Reporting Insights](docs/AI_REPORTING_INSIGHTS.md)
+- [AI Business Knowledge](docs/AI_BUSINESS_KNOWLEDGE.md)
 - [Cost architecture](docs/COST_ARCHITECTURE.md)
 - [Growth architecture (FUTURE)](docs/GROWTH_ARCHITECTURE.md)
 - [ADRs](docs/adr/)

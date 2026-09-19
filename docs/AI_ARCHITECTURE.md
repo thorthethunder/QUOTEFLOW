@@ -119,6 +119,17 @@ Local Ollama: provider API monetary cost is typically zero; **compute/infrastruc
 
 ## Incorrect vs correct
 
+## Business Knowledge RAG
+
+Business Knowledge is documented in [AI_BUSINESS_KNOWLEDGE.md](AI_BUSINESS_KNOWLEDGE.md).
+
+Phase 7 stores bounded text/TXT knowledge chunks in PostgreSQL with embedding provider/model/dimension metadata.
+Retrieval is tenant-filtered in SQL with `business_id = authenticated principal businessId`; QuoteFlow does not
+perform global vector retrieval followed only by Java filtering.
+
+RAG generation uses `AiProvider` without tool callbacks. Retrieved document text is untrusted evidence, not
+instructions, and source references are backend-authoritative.
+
 **Incorrect:** AI writing totals; AI choosing tenant; exposing repositories to the model.
 
 **Correct:** Copilot → allowlisted tool → (read: business service) or (action: prepare proposal → human confirm → business service).

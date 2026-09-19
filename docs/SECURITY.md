@@ -168,3 +168,11 @@ See [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md), [AI_ARCHITECTURE.md](AI_AR
 - Top invoices/customers are bounded and returned as evidence references for trusted frontend navigation.
 - Recent dashboard records are omitted from insight responses to minimize business data exposure.
 - AI disabled/unavailable/timeout returns facts and warnings rather than blocking reporting.
+
+## AI Phase 7 business knowledge controls
+
+- Business Knowledge derives tenant scope only from the authenticated principal.
+- Retrieval SQL filters `business_id`, embedding provider, model, and dimension before chunks reach AI.
+- Uploaded source types are allowlisted to authored text and TXT; PDF and arbitrary binary uploads are deferred.
+- RAG generation has no action or mutation tools.
+- Deleted and superseded chunks are removed from retrieval. See [AI_BUSINESS_KNOWLEDGE.md](AI_BUSINESS_KNOWLEDGE.md).

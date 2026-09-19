@@ -184,8 +184,11 @@ Do not execute mutations from the model alone. Reminder **send** is Phase 5.
 ## Related
 
 - [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md)
+- [AI_BUSINESS_KNOWLEDGE.md](AI_BUSINESS_KNOWLEDGE.md)
 - [AI_REPORTING_INSIGHTS.md](AI_REPORTING_INSIGHTS.md)
 - [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md)
 - [AI_LOCAL_DEVELOPMENT.md](AI_LOCAL_DEVELOPMENT.md)
 - [QUOTE_ASSISTANT.md](QUOTE_ASSISTANT.md)
 - [SECURITY.md](SECURITY.md)
+
+Business Knowledge (`/app/knowledge`) is a separate tenant-isolated RAG surface. It retrieves tenant-owned policy text with no mutation/action tools; Copilot action approvals remain a separate workflow.

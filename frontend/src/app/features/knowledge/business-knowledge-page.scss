@@ -1,0 +1,155 @@
+.knowledge-page {
+  display: grid;
+  gap: 20px;
+}
+
+.page-header,
+.documents-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: #5f6368;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+.knowledge-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+
+@media (min-width: 960px) {
+  .knowledge-grid {
+    grid-template-columns: minmax(280px, 0.9fr) minmax(360px, 1.1fr);
+  }
+}
+
+.panel {
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 18px;
+  background: #fff;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+  color: #3c4043;
+  font-weight: 600;
+}
+
+input,
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #c7cdd1;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button mat-icon {
+  margin-right: 6px;
+}
+
+.upload {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #eceff1;
+}
+
+.error {
+  border: 1px solid #f2b8b5;
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #fceeee;
+  color: #8c1d18;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+}
+
+.answer {
+  margin-top: 18px;
+  border-left: 4px solid #1a73e8;
+  padding: 12px 0 4px 14px;
+}
+
+.answer.no-answer {
+  border-left-color: #f9ab00;
+}
+
+.answer-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.answer-flags span {
+  border: 1px solid #dadce0;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  color: #3c4043;
+}
+
+.source {
+  display: grid;
+  gap: 4px;
+  border-top: 1px solid #eceff1;
+  padding: 10px 0;
+}
+
+.source span,
+.document-row p,
+.empty {
+  color: #5f6368;
+}
+
+.document-list {
+  display: grid;
+  gap: 10px;
+}
+
+.document-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #eceff1;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.document-row h3 {
+  margin-bottom: 4px;
+  font-size: 1rem;
+}
+
+.document-row p {
+  margin-bottom: 2px;
+  overflow-wrap: anywhere;
+}

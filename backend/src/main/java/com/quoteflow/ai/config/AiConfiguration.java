@@ -18,6 +18,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
+import java.time.Clock;
 import java.util.Locale;
 import java.util.Set;
 
@@ -43,6 +44,11 @@ public class AiConfiguration {
 			Validator validator,
 			AiProperties properties) {
 		return new StructuredOutputValidator(objectMapper, validator, properties.getMaxResponseChars());
+	}
+
+	@Bean
+	Clock clock() {
+		return Clock.systemUTC();
 	}
 
 	@Bean

@@ -33,6 +33,7 @@ public class AiProperties {
 	private final QuoteAssistant quoteAssistant = new QuoteAssistant();
 	private final BusinessCopilot businessCopilot = new BusinessCopilot();
 	private final ReportingInsights reportingInsights = new ReportingInsights();
+	private final Knowledge knowledge = new Knowledge();
 	private final Actions actions = new Actions();
 
 	public boolean isEnabled() {
@@ -97,8 +98,179 @@ public class AiProperties {
 		return reportingInsights;
 	}
 
+	public Knowledge getKnowledge() {
+		return knowledge;
+	}
+
 	public Actions getActions() {
 		return actions;
+	}
+
+	public static class Knowledge {
+		public static final int HARD_MAX_TITLE_CHARS = 140;
+		public static final int HARD_MAX_FILENAME_CHARS = 180;
+		public static final int HARD_MAX_FILE_BYTES = 1_000_000;
+		public static final int HARD_MAX_TEXT_CHARS = 120_000;
+		public static final int HARD_MAX_CHUNKS_PER_DOCUMENT = 80;
+		public static final int HARD_MAX_CHUNK_CHARS = 1_500;
+		public static final int HARD_MAX_OVERLAP_CHARS = 250;
+		public static final int HARD_MAX_TOP_K = 8;
+		public static final int HARD_MAX_SOURCE_EXCERPT_CHARS = 360;
+		public static final int HARD_MAX_QUESTION_CHARS = 1000;
+
+		private boolean enabled = false;
+		private String embeddingProvider = "OLLAMA";
+		private String embeddingModel = "mxbai-embed-large";
+		private int embeddingDimension = 1024;
+		private int maxTitleChars = 140;
+		private int maxFilenameChars = 180;
+		private int maxFileBytes = 500_000;
+		private int maxTextChars = 80_000;
+		private int maxChunksPerDocument = 60;
+		private int chunkSize = 900;
+		private int chunkOverlap = 120;
+		private int topK = 5;
+		private double relevanceThreshold = 0.55d;
+		private int sourceExcerptChars = 280;
+		private int maxQuestionChars = 1000;
+		private int queryPerUserPerMinute = 10;
+		private int queryPerTenantPerMinute = 30;
+
+		public boolean isEnabled() {
+			return enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+		public String getEmbeddingProvider() {
+			return embeddingProvider;
+		}
+
+		public void setEmbeddingProvider(String embeddingProvider) {
+			this.embeddingProvider = embeddingProvider == null ? "OLLAMA" : embeddingProvider.trim().toUpperCase();
+		}
+
+		public String getEmbeddingModel() {
+			return embeddingModel;
+		}
+
+		public void setEmbeddingModel(String embeddingModel) {
+			this.embeddingModel = embeddingModel == null ? "" : embeddingModel.trim();
+		}
+
+		public int getEmbeddingDimension() {
+			return embeddingDimension;
+		}
+
+		public void setEmbeddingDimension(int embeddingDimension) {
+			this.embeddingDimension = Math.max(8, Math.min(embeddingDimension, 8192));
+		}
+
+		public int getMaxTitleChars() {
+			return maxTitleChars;
+		}
+
+		public void setMaxTitleChars(int maxTitleChars) {
+			this.maxTitleChars = Math.max(10, Math.min(maxTitleChars, HARD_MAX_TITLE_CHARS));
+		}
+
+		public int getMaxFilenameChars() {
+			return maxFilenameChars;
+		}
+
+		public void setMaxFilenameChars(int maxFilenameChars) {
+			this.maxFilenameChars = Math.max(20, Math.min(maxFilenameChars, HARD_MAX_FILENAME_CHARS));
+		}
+
+		public int getMaxFileBytes() {
+			return maxFileBytes;
+		}
+
+		public void setMaxFileBytes(int maxFileBytes) {
+			this.maxFileBytes = Math.max(1024, Math.min(maxFileBytes, HARD_MAX_FILE_BYTES));
+		}
+
+		public int getMaxTextChars() {
+			return maxTextChars;
+		}
+
+		public void setMaxTextChars(int maxTextChars) {
+			this.maxTextChars = Math.max(500, Math.min(maxTextChars, HARD_MAX_TEXT_CHARS));
+		}
+
+		public int getMaxChunksPerDocument() {
+			return maxChunksPerDocument;
+		}
+
+		public void setMaxChunksPerDocument(int maxChunksPerDocument) {
+			this.maxChunksPerDocument = Math.max(1, Math.min(maxChunksPerDocument, HARD_MAX_CHUNKS_PER_DOCUMENT));
+		}
+
+		public int getChunkSize() {
+			return chunkSize;
+		}
+
+		public void setChunkSize(int chunkSize) {
+			this.chunkSize = Math.max(200, Math.min(chunkSize, HARD_MAX_CHUNK_CHARS));
+		}
+
+		public int getChunkOverlap() {
+			return chunkOverlap;
+		}
+
+		public void setChunkOverlap(int chunkOverlap) {
+			this.chunkOverlap = Math.max(0, Math.min(chunkOverlap, HARD_MAX_OVERLAP_CHARS));
+		}
+
+		public int getTopK() {
+			return topK;
+		}
+
+		public void setTopK(int topK) {
+			this.topK = Math.max(1, Math.min(topK, HARD_MAX_TOP_K));
+		}
+
+		public double getRelevanceThreshold() {
+			return relevanceThreshold;
+		}
+
+		public void setRelevanceThreshold(double relevanceThreshold) {
+			this.relevanceThreshold = Math.max(0.0d, Math.min(relevanceThreshold, 0.99d));
+		}
+
+		public int getSourceExcerptChars() {
+			return sourceExcerptChars;
+		}
+
+		public void setSourceExcerptChars(int sourceExcerptChars) {
+			this.sourceExcerptChars = Math.max(80, Math.min(sourceExcerptChars, HARD_MAX_SOURCE_EXCERPT_CHARS));
+		}
+
+		public int getMaxQuestionChars() {
+			return maxQuestionChars;
+		}
+
+		public void setMaxQuestionChars(int maxQuestionChars) {
+			this.maxQuestionChars = Math.max(50, Math.min(maxQuestionChars, HARD_MAX_QUESTION_CHARS));
+		}
+
+		public int getQueryPerUserPerMinute() {
+			return queryPerUserPerMinute;
+		}
+
+		public void setQueryPerUserPerMinute(int queryPerUserPerMinute) {
+			this.queryPerUserPerMinute = Math.max(1, queryPerUserPerMinute);
+		}
+
+		public int getQueryPerTenantPerMinute() {
+			return queryPerTenantPerMinute;
+		}
+
+		public void setQueryPerTenantPerMinute(int queryPerTenantPerMinute) {
+			this.queryPerTenantPerMinute = Math.max(1, queryPerTenantPerMinute);
+		}
 	}
 
 	public static class ReportingInsights {

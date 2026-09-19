@@ -130,6 +130,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'knowledge',
+        loadComponent: () =>
+          import('./features/knowledge/business-knowledge-page').then(
+            (m) => m.BusinessKnowledgePageComponent,
+          ),
+      },
+      {
         path: 'plan',
         loadComponent: () =>
           import('./features/plan/plan-page').then((m) => m.PlanPageComponent),

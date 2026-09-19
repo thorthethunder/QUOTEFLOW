@@ -90,3 +90,18 @@ AI_REPORTING_INSIGHTS_RATE_TENANT=20
 
 With `AI_ENABLED=false`, the endpoint still returns deterministic facts, bounded evidence, references, and warnings.
 See [AI_REPORTING_INSIGHTS.md](AI_REPORTING_INSIGHTS.md).
+
+## Business Knowledge
+
+Business Knowledge is available at `/app/knowledge` when enabled.
+
+```text
+AI_KNOWLEDGE_ENABLED=true
+AI_EMBEDDING_PROVIDER=OLLAMA
+OLLAMA_EMBEDDING_MODEL=mxbai-embed-large
+AI_KNOWLEDGE_EMBEDDING_DIMENSION=1024
+```
+
+Start PostgreSQL first; embeddings are stored in QuoteFlow tables and retrieved with tenant-filtered SQL.
+QuoteFlow does not automatically pull embedding models. Use `ollama list` and `ollama pull mxbai-embed-large`
+manually if needed. See [AI_BUSINESS_KNOWLEDGE.md](AI_BUSINESS_KNOWLEDGE.md).
