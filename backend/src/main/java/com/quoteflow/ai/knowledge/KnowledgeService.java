@@ -14,6 +14,7 @@ import com.quoteflow.ai.provider.AiProviderType;
 import com.quoteflow.ai.provider.AiRequest;
 import com.quoteflow.ai.usage.AiUsageEvent;
 import com.quoteflow.ai.usage.AiUsageRecorder;
+import com.quoteflow.ai.usage.AiEntitlementService;
 import com.quoteflow.common.api.DomainApiException;
 import com.quoteflow.security.AuthenticatedUser;
 import org.springframework.http.HttpStatus;
@@ -38,6 +39,7 @@ public class KnowledgeService {
 	private final AiProvider aiProvider;
 	private final KnowledgeRateLimiter rateLimiter;
 	private final AiUsageRecorder usageRecorder;
+	private final AiEntitlementService aiEntitlementService;
 	private final Clock clock;
 
 	public KnowledgeService(
@@ -48,6 +50,7 @@ public class KnowledgeService {
 			AiProvider aiProvider,
 			KnowledgeRateLimiter rateLimiter,
 			AiUsageRecorder usageRecorder,
+			AiEntitlementService aiEntitlementService,
 			Clock clock) {
 		this.properties = properties;
 		this.embeddingProvider = embeddingProvider;
@@ -56,6 +59,7 @@ public class KnowledgeService {
 		this.aiProvider = aiProvider;
 		this.rateLimiter = rateLimiter;
 		this.usageRecorder = usageRecorder;
+		this.aiEntitlementService = aiEntitlementService;
 		this.clock = clock;
 	}
 
@@ -63,6 +67,8 @@ public class KnowledgeService {
 		requireEnabled();
 		String title = validateTitle(request.title());
 		String text = validateText(request.text());
+		aiEntitlementService.consumeAllowance(
+				principal.getBusinessId(), principal.getUserId(), AiFeature.KNOWLEDGE_INGESTION, "knowledge_ingestion");
 		return toDto(indexNew(principal, title, text, KnowledgeSourceType.TEXT, null, "text/plain"));
 	}
 
@@ -82,6 +88,8 @@ public class KnowledgeService {
 		try {
 			String text = validateText(new String(file.getBytes(), StandardCharsets.UTF_8));
 			String effectiveTitle = title == null || title.isBlank() ? stripExtension(original) : title;
+			aiEntitlementService.consumeAllowance(
+					principal.getBusinessId(), principal.getUserId(), AiFeature.KNOWLEDGE_INGESTION, "knowledge_ingestion");
 			return toDto(indexNew(principal, validateTitle(effectiveTitle), text, KnowledgeSourceType.TXT, original, "text/plain"));
 		} catch (IOException ex) {
 			throw badRequest("KNOWLEDGE_FILE_READ_FAILED", "Unable to read uploaded file");
@@ -103,7 +111,9 @@ public class KnowledgeService {
 		String title = validateTitle(request.title());
 		String text = validateText(request.text());
 		List<String> chunks = chunker.chunk(text);
-		List<KnowledgeEmbedding> embeddings = embedAll(chunks);
+		aiEntitlementService.consumeAllowance(
+				principal.getBusinessId(), principal.getUserId(), AiFeature.KNOWLEDGE_INGESTION, "knowledge_ingestion");
+		List<KnowledgeEmbedding> embeddings = embedAll(principal, chunks, "knowledge_ingestion");
 		KnowledgeDocumentRow updated = repository.replaceText(principal.getBusinessId(), id, title, chunks, embeddings, Instant.now(clock));
 		return toDto(updated);
 	}
@@ -119,14 +129,15 @@ public class KnowledgeService {
 		if (!rateLimiter.tryAcquire(principal.getBusinessId(), principal.getUserId())) {
 			throw new DomainApiException(HttpStatus.TOO_MANY_REQUESTS, "KNOWLEDGE_RATE_LIMITED", "Knowledge query rate limit exceeded");
 		}
-		KnowledgeEmbedding queryEmbedding = embeddingProvider.embed(question);
+		aiEntitlementService.consumeAllowance(
+				principal.getBusinessId(), principal.getUserId(), AiFeature.KNOWLEDGE_QUERY, "knowledge_query");
+		KnowledgeEmbedding queryEmbedding = embedOne(principal, question, AiFeature.KNOWLEDGE_QUERY, "knowledge_query_embedding", null);
 		List<KnowledgeSearchResult> results = repository.search(
 				principal.getBusinessId(),
 				queryEmbedding,
 				properties.getKnowledge().getRelevanceThreshold(),
 				properties.getKnowledge().getTopK());
 		if (results.isEmpty()) {
-			recordNoAnswer(principal);
 			return new KnowledgeAskResponse(
 					"I could not find that information in your business knowledge.",
 					false,
@@ -136,7 +147,6 @@ public class KnowledgeService {
 		}
 		List<KnowledgeSourceReference> sources = results.stream().map(this::toReference).toList();
 		if (!aiProvider.isEnabled() || !aiProvider.isAvailable()) {
-			recordNoAnswer(principal);
 			return new KnowledgeAskResponse(
 					fallbackAnswer(results),
 					true,
@@ -171,7 +181,7 @@ public class KnowledgeService {
 			String filename,
 			String contentType) {
 		List<String> chunks = chunker.chunk(text);
-		List<KnowledgeEmbedding> embeddings = embedAll(chunks);
+		List<KnowledgeEmbedding> embeddings = embedAll(principal, chunks, "knowledge_ingestion");
 		Instant now = Instant.now(clock);
 		KnowledgeDocumentRow doc = new KnowledgeDocumentRow(
 				UUID.randomUUID(),
@@ -190,19 +200,62 @@ public class KnowledgeService {
 		return doc;
 	}
 
-	private List<KnowledgeEmbedding> embedAll(List<String> chunks) {
+	private List<KnowledgeEmbedding> embedAll(AuthenticatedUser principal, List<String> chunks, String operation) {
 		if (!embeddingProvider.isAvailable()) {
 			throw new DomainApiException(HttpStatus.SERVICE_UNAVAILABLE, "EMBEDDING_PROVIDER_UNAVAILABLE", "Embedding provider is unavailable");
 		}
 		List<KnowledgeEmbedding> embeddings = new ArrayList<>(chunks.size());
 		for (String chunk : chunks) {
-			KnowledgeEmbedding embedding = embeddingProvider.embed(chunk);
+			KnowledgeEmbedding embedding = embedOne(principal, chunk, AiFeature.KNOWLEDGE_INGESTION, operation + "_embedding", null);
 			if (embedding.dimension() != properties.getKnowledge().getEmbeddingDimension()) {
 				throw new DomainApiException(HttpStatus.SERVICE_UNAVAILABLE, "EMBEDDING_DIMENSION_MISMATCH", "Embedding model dimension does not match configuration");
 			}
 			embeddings.add(embedding);
 		}
 		return embeddings;
+	}
+
+	private KnowledgeEmbedding embedOne(
+			AuthenticatedUser principal,
+			String text,
+			AiFeature feature,
+			String operation,
+			String referenceKey) {
+		long start = System.nanoTime();
+		try {
+			KnowledgeEmbedding embedding = embeddingProvider.embed(text);
+			usageRecorder.record(AiUsageEvent.embedding(
+					providerType(embedding.provider()),
+					embedding.provider(),
+					embedding.model(),
+					feature,
+					operation,
+					true,
+					null,
+					elapsed(start),
+					text == null ? 0 : text.length(),
+					1,
+					principal.getBusinessId(),
+					principal.getUserId(),
+					referenceKey));
+			return embedding;
+		} catch (RuntimeException ex) {
+			usageRecorder.record(AiUsageEvent.embedding(
+					providerType(embeddingProvider.providerName()),
+					embeddingProvider.providerName(),
+					embeddingProvider.model(),
+					feature,
+					operation,
+					false,
+					"EMBEDDING_FAILED",
+					elapsed(start),
+					text == null ? 0 : text.length(),
+					0,
+					principal.getBusinessId(),
+					principal.getUserId(),
+					referenceKey));
+			throw ex;
+		}
 	}
 
 	private void requireEnabled() {
@@ -291,19 +344,12 @@ public class KnowledgeService {
 				+ "\", but AI narration is unavailable. Please review the listed source excerpt.";
 	}
 
-	private void recordNoAnswer(AuthenticatedUser principal) {
-		usageRecorder.record(new AiUsageEvent(
-				AiProviderType.DISABLED,
-				"DISABLED",
-				"",
-				AiFeature.BUSINESS_KNOWLEDGE,
-				true,
-				null,
-				0L,
-				null,
-				null,
-				principal.getBusinessId(),
-				principal.getUserId()));
+	private static AiProviderType providerType(String provider) {
+		return "OLLAMA".equalsIgnoreCase(provider) ? AiProviderType.OLLAMA : AiProviderType.DISABLED;
+	}
+
+	private static long elapsed(long start) {
+		return (System.nanoTime() - start) / 1_000_000L;
 	}
 
 	private boolean isTxt(String filename, String contentType) {

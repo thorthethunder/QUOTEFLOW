@@ -47,6 +47,7 @@ export class AppShellComponent {
     { label: 'Knowledge', path: '/app/knowledge', icon: 'library_books', exact: false },
     { label: 'Workflows', path: '/app/workflows', icon: 'account_tree', exact: false },
     { label: 'Business Copilot', path: '/app/copilot', icon: 'smart_toy', exact: false },
+    { label: 'AI Usage', path: '/app/ai-usage', icon: 'speed', exact: false },
     { label: 'Plan & usage', path: '/app/plan', icon: 'workspace_premium', exact: false },
   ] as const;
 

@@ -10,13 +10,14 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(OutputCaptureExtension.class)
 class LoggingAiUsageRecorderTest {
 
 	@Test
 	void doesNotLogPromptOrCustomerPayload(CapturedOutput output) {
-		LoggingAiUsageRecorder recorder = new LoggingAiUsageRecorder();
+		LoggingAiUsageRecorder recorder = new LoggingAiUsageRecorder(mock(AiUsageLedgerService.class));
 		recorder.record(new AiUsageEvent(
 				AiProviderType.OLLAMA,
 				"OLLAMA",

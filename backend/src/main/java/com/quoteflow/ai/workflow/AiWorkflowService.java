@@ -8,6 +8,8 @@ import com.quoteflow.ai.action.AiActionProposalRepository;
 import com.quoteflow.ai.action.AiActionProposalStatus;
 import com.quoteflow.ai.action.dto.ActionProposalSummaryDto;
 import com.quoteflow.ai.config.AiProperties;
+import com.quoteflow.ai.provider.AiFeature;
+import com.quoteflow.ai.usage.AiEntitlementService;
 import com.quoteflow.ai.workflow.dto.AiWorkflowListItemDto;
 import com.quoteflow.ai.workflow.dto.AiWorkflowResponse;
 import com.quoteflow.ai.workflow.dto.AiWorkflowStepDto;
@@ -47,6 +49,7 @@ public class AiWorkflowService {
 	private final AiWorkflowStateMachine stateMachine;
 	private final AiWorkflowStepRegistry stepRegistry;
 	private final AiWorkflowRateLimiter rateLimiter;
+	private final AiEntitlementService aiEntitlementService;
 	private final AiProperties aiProperties;
 	private final ObjectMapper objectMapper;
 
@@ -59,6 +62,7 @@ public class AiWorkflowService {
 			AiWorkflowStateMachine stateMachine,
 			AiWorkflowStepRegistry stepRegistry,
 			AiWorkflowRateLimiter rateLimiter,
+			AiEntitlementService aiEntitlementService,
 			AiProperties aiProperties,
 			ObjectMapper objectMapper) {
 		this.workflowRepository = workflowRepository;
@@ -69,6 +73,7 @@ public class AiWorkflowService {
 		this.stateMachine = stateMachine;
 		this.stepRegistry = stepRegistry;
 		this.rateLimiter = rateLimiter;
+		this.aiEntitlementService = aiEntitlementService;
 		this.aiProperties = aiProperties;
 		this.objectMapper = objectMapper;
 	}
@@ -90,6 +95,8 @@ public class AiWorkflowService {
 				return observeAndBuild(principal, existing.get().getId());
 			}
 		}
+		aiEntitlementService.consumeAllowance(
+				principal.getBusinessId(), principal.getUserId(), AiFeature.AGENT_WORKFLOW, type.name().toLowerCase(Locale.ROOT));
 
 		Instant now = Instant.now();
 		AiWorkflow workflow = new AiWorkflow(

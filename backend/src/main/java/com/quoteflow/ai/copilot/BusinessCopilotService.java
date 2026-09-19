@@ -14,6 +14,7 @@ import com.quoteflow.ai.tool.CopilotToolContext;
 import com.quoteflow.ai.tool.ToolCallLimitExceededException;
 import com.quoteflow.ai.usage.AiUsageEvent;
 import com.quoteflow.ai.usage.AiUsageRecorder;
+import com.quoteflow.ai.usage.AiEntitlementService;
 import com.quoteflow.common.api.DomainApiException;
 import com.quoteflow.security.AuthenticatedUser;
 import org.springframework.ai.chat.client.ChatClient;
@@ -59,6 +60,7 @@ public class BusinessCopilotService {
 	private final AiToolRegistry toolRegistry;
 	private final BusinessCopilotRateLimiter rateLimiter;
 	private final AiUsageRecorder usageRecorder;
+	private final AiEntitlementService aiEntitlementService;
 	private final ObjectProvider<ChatClient> chatClientProvider;
 
 	public BusinessCopilotService(
@@ -67,12 +69,14 @@ public class BusinessCopilotService {
 			AiToolRegistry toolRegistry,
 			BusinessCopilotRateLimiter rateLimiter,
 			AiUsageRecorder usageRecorder,
+			AiEntitlementService aiEntitlementService,
 			ObjectProvider<ChatClient> chatClientProvider) {
 		this.aiProvider = aiProvider;
 		this.aiProperties = aiProperties;
 		this.toolRegistry = toolRegistry;
 		this.rateLimiter = rateLimiter;
 		this.usageRecorder = usageRecorder;
+		this.aiEntitlementService = aiEntitlementService;
 		this.chatClientProvider = chatClientProvider;
 	}
 
@@ -104,6 +108,11 @@ public class BusinessCopilotService {
 			throw new DomainApiException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR",
 					"Message exceeds maximum length of " + maxChars + " characters");
 		}
+		aiEntitlementService.consumeAllowance(
+				principal.getBusinessId(),
+				principal.getUserId(),
+				looksLikeReminderRequest(message) ? AiFeature.PAYMENT_REMINDER : AiFeature.BUSINESS_COPILOT,
+				looksLikeReminderRequest(message) ? "payment_reminder_draft" : "business_copilot");
 
 		List<String> warnings = new ArrayList<>();
 		boolean actionsOn = aiProperties.getActions().isEnabled();
@@ -264,6 +273,11 @@ public class BusinessCopilotService {
 				|| m.contains("update ")
 				|| m.contains("record payment")
 				|| m.contains("reminder");
+	}
+
+	private static boolean looksLikeReminderRequest(String message) {
+		String m = message.toLowerCase(Locale.ROOT);
+		return m.contains("reminder") || m.contains("follow up") || m.contains("follow-up");
 	}
 
 	private static String trim(String value) {

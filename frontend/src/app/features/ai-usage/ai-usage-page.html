@@ -1,0 +1,81 @@
+<section class="ai-usage">
+  <header class="page-header">
+    <div>
+      <h1>AI usage</h1>
+      <p class="subtitle">Monthly allowance consumption for this workspace.</p>
+    </div>
+    <button mat-stroked-button type="button" (click)="reload()" [disabled]="loading()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </header>
+
+  @if (error(); as err) {
+    <div class="banner error" role="alert">{{ err }}</div>
+  }
+
+  @if (loading()) {
+    <div class="state" role="status" aria-live="polite">
+      <mat-spinner diameter="36" />
+      <p>Loading AI usage...</p>
+    </div>
+  } @else {
+    <section class="usage-summary" aria-label="AI usage summary">
+      <div>
+        <span>Period</span>
+        <strong>{{ period() || 'Current month' }}</strong>
+      </div>
+      <div>
+        <span>Enabled features</span>
+        <strong>{{ enabledCount() }}</strong>
+      </div>
+      <div>
+        <span>At limit</span>
+        <strong>{{ limitedCount() }}</strong>
+      </div>
+      <div>
+        <span>Resets</span>
+        <strong>{{ resetAt() | date: 'mediumDate' }}</strong>
+      </div>
+    </section>
+
+    <section class="usage-list" aria-label="AI feature usage">
+      @for (feature of features(); track feature.feature) {
+        <article class="usage-row" [class.disabled]="state(feature) === 'disabled'">
+          <div class="feature-title">
+            <mat-icon aria-hidden="true">
+              {{ state(feature) === 'disabled' ? 'lock' : state(feature) === 'full' ? 'block' : 'auto_awesome' }}
+            </mat-icon>
+            <div>
+              <h2>{{ label(feature.feature) }}</h2>
+              <p>{{ stateLabel(feature) }}</p>
+            </div>
+          </div>
+
+          <div class="usage-meter">
+            <div class="meter-copy">
+              <strong>{{ usageLabel(feature) }}</strong>
+              <span>
+                @if (feature.entitled) {
+                  {{ feature.remaining }} remaining
+                } @else {
+                  Upgrade required
+                }
+              </span>
+            </div>
+            <mat-progress-bar
+              mode="determinate"
+              [value]="percent(feature)"
+              [attr.aria-label]="label(feature.feature) + ' usage'"
+            />
+          </div>
+        </article>
+      } @empty {
+        <article class="empty-panel">
+          <h2>No AI usage is available</h2>
+          <p class="empty">Usage will appear after AI features are enabled for this workspace.</p>
+        </article>
+      }
+    </section>
+  }
+</section>

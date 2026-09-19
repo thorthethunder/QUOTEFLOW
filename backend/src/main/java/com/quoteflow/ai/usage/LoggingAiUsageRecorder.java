@@ -11,17 +11,25 @@ import org.springframework.stereotype.Component;
 public class LoggingAiUsageRecorder implements AiUsageRecorder {
 
 	private static final Logger log = LoggerFactory.getLogger(LoggingAiUsageRecorder.class);
+	private final AiUsageLedgerService ledgerService;
+
+	public LoggingAiUsageRecorder(AiUsageLedgerService ledgerService) {
+		this.ledgerService = ledgerService;
+	}
 
 	@Override
 	public void record(AiUsageEvent event) {
+		ledgerService.record(event);
 		int in = event.inputTokens() == null ? -1 : event.inputTokens();
 		int out = event.outputTokens() == null ? -1 : event.outputTokens();
 		int tools = event.toolCallCount() == null ? -1 : event.toolCallCount();
 		log.info(
-				"ai.usage provider={} model={} feature={} success={} errorCode={} latencyMs={} inputTokens={} outputTokens={} toolCalls={} businessIdPresent={} userIdPresent={}",
+				"ai.usage provider={} model={} feature={} operation={} usageType={} success={} errorCode={} latencyMs={} inputTokens={} outputTokens={} toolCalls={} businessIdPresent={} userIdPresent={}",
 				event.providerName(),
 				event.model(),
 				event.feature(),
+				event.operation(),
+				event.usageType(),
 				event.success(),
 				event.errorCode() == null ? "-" : event.errorCode(),
 				event.latencyMs(),

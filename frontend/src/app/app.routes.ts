@@ -144,6 +144,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'ai-usage',
+        loadComponent: () =>
+          import('./features/ai-usage/ai-usage-page').then(
+            (m) => m.AiUsagePageComponent,
+          ),
+      },
+      {
         path: 'plan',
         loadComponent: () =>
           import('./features/plan/plan-page').then((m) => m.PlanPageComponent),

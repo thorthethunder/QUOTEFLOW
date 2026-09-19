@@ -11,6 +11,7 @@ import com.quoteflow.ai.provider.AiGenerationOptions;
 import com.quoteflow.ai.provider.AiProvider;
 import com.quoteflow.ai.structured.StructuredAiRequest;
 import com.quoteflow.ai.structured.StructuredAiResponse;
+import com.quoteflow.ai.usage.AiEntitlementService;
 import com.quoteflow.business.Business;
 import com.quoteflow.business.BusinessRepository;
 import com.quoteflow.common.api.DomainApiException;
@@ -49,6 +50,7 @@ public class QuoteAssistantService {
 	private final CustomerService customerService;
 	private final BusinessRepository businessRepository;
 	private final QuoteAssistantRateLimiter rateLimiter;
+	private final AiEntitlementService aiEntitlementService;
 	private final ObjectMapper objectMapper;
 
 	public QuoteAssistantService(
@@ -57,12 +59,14 @@ public class QuoteAssistantService {
 			CustomerService customerService,
 			BusinessRepository businessRepository,
 			QuoteAssistantRateLimiter rateLimiter,
+			AiEntitlementService aiEntitlementService,
 			ObjectMapper objectMapper) {
 		this.aiProvider = aiProvider;
 		this.aiProperties = aiProperties;
 		this.customerService = customerService;
 		this.businessRepository = businessRepository;
 		this.rateLimiter = rateLimiter;
+		this.aiEntitlementService = aiEntitlementService;
 		this.objectMapper = objectMapper;
 	}
 
@@ -82,6 +86,8 @@ public class QuoteAssistantService {
 			throw new DomainApiException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR",
 					"Prompt exceeds maximum length of " + max + " characters");
 		}
+		aiEntitlementService.consumeAllowance(
+				principal.getBusinessId(), principal.getUserId(), AiFeature.QUOTE_DRAFT, "quote_draft");
 
 		StructuredAiResponse<QuoteDraftExtraction> structured;
 		try {

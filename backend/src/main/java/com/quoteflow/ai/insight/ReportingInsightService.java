@@ -20,6 +20,7 @@ import com.quoteflow.ai.provider.AiProviderType;
 import com.quoteflow.ai.provider.AiRequest;
 import com.quoteflow.ai.usage.AiUsageEvent;
 import com.quoteflow.ai.usage.AiUsageRecorder;
+import com.quoteflow.ai.usage.AiEntitlementService;
 import com.quoteflow.business.Business;
 import com.quoteflow.business.BusinessRepository;
 import com.quoteflow.common.api.DomainApiException;
@@ -33,7 +34,6 @@ import com.quoteflow.reporting.dto.OutstandingInvoiceDto;
 import com.quoteflow.security.AuthenticatedUser;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.ResourceAccessException;
 
@@ -72,6 +72,7 @@ public class ReportingInsightService {
 	private final AiProperties aiProperties;
 	private final ReportingInsightsRateLimiter rateLimiter;
 	private final AiUsageRecorder usageRecorder;
+	private final AiEntitlementService aiEntitlementService;
 	private final ObjectMapper objectMapper;
 
 	public ReportingInsightService(
@@ -82,6 +83,7 @@ public class ReportingInsightService {
 			AiProperties aiProperties,
 			ReportingInsightsRateLimiter rateLimiter,
 			AiUsageRecorder usageRecorder,
+			AiEntitlementService aiEntitlementService,
 			ObjectMapper objectMapper) {
 		this.reportingService = reportingService;
 		this.reportingRepository = reportingRepository;
@@ -90,10 +92,10 @@ public class ReportingInsightService {
 		this.aiProperties = aiProperties;
 		this.rateLimiter = rateLimiter;
 		this.usageRecorder = usageRecorder;
+		this.aiEntitlementService = aiEntitlementService;
 		this.objectMapper = objectMapper;
 	}
 
-	@Transactional(readOnly = true)
 	public ReportingInsightResponse analyze(AuthenticatedUser principal, ReportingInsightRequest request) {
 		if (!rateLimiter.tryAcquire(principal.getBusinessId(), principal.getUserId())) {
 			recordFailure(principal, "AI_RATE_LIMITED", 0L);
@@ -151,6 +153,11 @@ public class ReportingInsightService {
 		} else {
 			long start = System.nanoTime();
 			try {
+				aiEntitlementService.consumeAllowance(
+						principal.getBusinessId(),
+						principal.getUserId(),
+						AiFeature.REPORTING_INSIGHT,
+						"reporting_insight");
 				String prompt = buildPrompt(question, type, period, comparison, metrics, comparisonMetrics,
 						facts, outstandingDto, customerDto);
 				var response = aiProvider.generate(new AiRequest(
@@ -170,6 +177,12 @@ public class ReportingInsightService {
 			} catch (AiException ex) {
 				recordFailure(principal, ex.getCode(), elapsed(start));
 				warnings.add(aiWarning(ex));
+			} catch (DomainApiException ex) {
+				if ("AI_USAGE_LIMIT_REACHED".equals(ex.getCode()) || "AI_FEATURE_NOT_ENTITLED".equals(ex.getCode())) {
+					warnings.add("AI summary is unavailable because the AI allowance for this period is not available. Authoritative metrics are still shown.");
+				} else {
+					throw ex;
+				}
 			} catch (Exception ex) {
 				AiException mapped = mapException(ex);
 				recordFailure(principal, mapped.getCode(), elapsed(start));

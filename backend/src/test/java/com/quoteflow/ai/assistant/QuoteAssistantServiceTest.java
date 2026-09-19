@@ -8,6 +8,7 @@ import com.quoteflow.ai.exception.AiUnavailableException;
 import com.quoteflow.ai.provider.AiProvider;
 import com.quoteflow.ai.structured.StructuredAiRequest;
 import com.quoteflow.ai.structured.StructuredAiResponse;
+import com.quoteflow.ai.usage.AiEntitlementService;
 import com.quoteflow.business.BusinessRepository;
 import com.quoteflow.common.api.DomainApiException;
 import com.quoteflow.customer.CustomerService;
@@ -45,6 +46,7 @@ class QuoteAssistantServiceTest {
 	@Mock CustomerService customerService;
 	@Mock BusinessRepository businessRepository;
 	@Mock QuoteAssistantRateLimiter rateLimiter;
+	@Mock AiEntitlementService aiEntitlementService;
 
 	AiProperties aiProperties;
 	QuoteAssistantService service;
@@ -55,7 +57,8 @@ class QuoteAssistantServiceTest {
 		aiProperties = new AiProperties();
 		aiProperties.setEnabled(true);
 		service = new QuoteAssistantService(
-				aiProvider, aiProperties, customerService, businessRepository, rateLimiter, new ObjectMapper());
+				aiProvider, aiProperties, customerService, businessRepository, rateLimiter, aiEntitlementService,
+				new ObjectMapper());
 		principal = new AuthenticatedUser(
 				UUID.randomUUID(), UUID.randomUUID(), TenantRole.OWNER, "owner@test.local");
 	}
