@@ -35,6 +35,7 @@ public class AiProperties {
 	private final ReportingInsights reportingInsights = new ReportingInsights();
 	private final Knowledge knowledge = new Knowledge();
 	private final Actions actions = new Actions();
+	private final Workflows workflows = new Workflows();
 
 	public boolean isEnabled() {
 		return enabled;
@@ -104,6 +105,103 @@ public class AiProperties {
 
 	public Actions getActions() {
 		return actions;
+	}
+
+	public Workflows getWorkflows() {
+		return workflows;
+	}
+
+	public static class Workflows {
+		public static final int HARD_MAX_STEPS = 12;
+		public static final int HARD_MAX_ACTION_PROPOSALS = 5;
+		public static final int HARD_MAX_PAYMENT_FOLLOW_UP_ITEMS = 5;
+		public static final int HARD_MAX_AI_CALLS = 0;
+		public static final Duration HARD_MAX_TTL = Duration.ofHours(2);
+
+		/** Master switch for durable agent workflows. Default false for production safety. */
+		private boolean enabled = false;
+		private int maxSteps = 8;
+		private int maxActionProposals = 3;
+		private int maxPaymentFollowUpItems = 3;
+		private int maxAiCalls = 0;
+		private Duration ttl = Duration.ofMinutes(30);
+		private int perUserPerMinute = 3;
+		private int perTenantPerMinute = 10;
+
+		public boolean isEnabled() {
+			return enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+		public int getMaxSteps() {
+			return maxSteps;
+		}
+
+		public void setMaxSteps(int maxSteps) {
+			this.maxSteps = Math.max(1, Math.min(maxSteps, HARD_MAX_STEPS));
+		}
+
+		public int getMaxActionProposals() {
+			return maxActionProposals;
+		}
+
+		public void setMaxActionProposals(int maxActionProposals) {
+			this.maxActionProposals = Math.max(1, Math.min(maxActionProposals, HARD_MAX_ACTION_PROPOSALS));
+		}
+
+		public int getMaxPaymentFollowUpItems() {
+			return maxPaymentFollowUpItems;
+		}
+
+		public void setMaxPaymentFollowUpItems(int maxPaymentFollowUpItems) {
+			this.maxPaymentFollowUpItems = Math.max(1,
+					Math.min(maxPaymentFollowUpItems, HARD_MAX_PAYMENT_FOLLOW_UP_ITEMS));
+		}
+
+		public int getMaxAiCalls() {
+			return maxAiCalls;
+		}
+
+		public void setMaxAiCalls(int maxAiCalls) {
+			this.maxAiCalls = Math.max(0, Math.min(maxAiCalls, HARD_MAX_AI_CALLS));
+		}
+
+		public Duration getTtl() {
+			return ttl;
+		}
+
+		public void setTtl(Duration ttl) {
+			if (ttl == null || ttl.isNegative() || ttl.isZero()) {
+				this.ttl = Duration.ofMinutes(30);
+				return;
+			}
+			if (ttl.compareTo(HARD_MAX_TTL) > 0) {
+				this.ttl = HARD_MAX_TTL;
+			} else if (ttl.compareTo(Duration.ofMinutes(5)) < 0) {
+				this.ttl = Duration.ofMinutes(5);
+			} else {
+				this.ttl = ttl;
+			}
+		}
+
+		public int getPerUserPerMinute() {
+			return perUserPerMinute;
+		}
+
+		public void setPerUserPerMinute(int perUserPerMinute) {
+			this.perUserPerMinute = Math.max(1, perUserPerMinute);
+		}
+
+		public int getPerTenantPerMinute() {
+			return perTenantPerMinute;
+		}
+
+		public void setPerTenantPerMinute(int perTenantPerMinute) {
+			this.perTenantPerMinute = Math.max(1, perTenantPerMinute);
+		}
 	}
 
 	public static class Knowledge {

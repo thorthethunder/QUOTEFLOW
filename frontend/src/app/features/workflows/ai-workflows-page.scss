@@ -1,0 +1,233 @@
+.workflows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qf-space-4);
+  max-width: var(--qf-content-max);
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 2vw, 1.875rem);
+  font-weight: 700;
+  color: var(--qf-ink);
+}
+
+.subtitle,
+.empty {
+  margin: 0.25rem 0 0;
+  color: var(--qf-text-muted);
+  line-height: 1.45;
+}
+
+.workflow-form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--qf-space-3);
+  align-items: start;
+}
+
+.goal-field,
+.limit-field {
+  width: 100%;
+}
+
+.workflow-form button,
+.workflow-actions button,
+.approval-actions button,
+.approval-actions a {
+  min-height: 2.75rem;
+}
+
+.workflow-summary,
+.approval-item,
+.steps-panel,
+.empty-panel,
+.state {
+  background: var(--qf-surface);
+  border: 1px solid var(--qf-border);
+  border-radius: var(--qf-radius-lg);
+}
+
+.workflow-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--qf-space-3);
+  padding: var(--qf-space-4);
+}
+
+.workflow-summary div,
+.proposal-grid div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.workflow-summary span,
+.proposal-grid span,
+.expires,
+.steps-panel small {
+  color: var(--qf-text-muted);
+  font-size: 0.8125rem;
+}
+
+.workflow-summary strong,
+.proposal-grid strong {
+  color: var(--qf-ink);
+  overflow-wrap: anywhere;
+}
+
+.workflow-actions,
+.approval-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--qf-space-2);
+}
+
+.danger {
+  color: var(--mat-sys-error);
+}
+
+.approval-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--qf-space-3);
+}
+
+.approval-item,
+.steps-panel,
+.empty-panel {
+  padding: var(--qf-space-4);
+}
+
+.approval-item header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--qf-space-3);
+  align-items: start;
+}
+
+.eyebrow {
+  margin: 0 0 0.25rem;
+  color: var(--qf-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.approval-item h2,
+.steps-panel h2,
+.empty-panel h2 {
+  margin: 0 0 var(--qf-space-3);
+  color: var(--qf-ink);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.proposal-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--qf-space-3);
+  margin: var(--qf-space-3) 0;
+}
+
+.message-preview {
+  margin: 0 0 var(--qf-space-3);
+  padding: var(--qf-space-3);
+  background: var(--qf-surface-muted);
+  border: 1px solid var(--qf-border-subtle);
+  border-radius: var(--qf-radius-md);
+  color: var(--qf-ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.steps-panel ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--qf-space-2);
+}
+
+.steps-panel li {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: var(--qf-space-2);
+  align-items: center;
+  padding-bottom: var(--qf-space-2);
+  border-bottom: 1px solid var(--qf-border-subtle);
+}
+
+.steps-panel li:last-child {
+  border-bottom: none;
+}
+
+.steps-panel li > span {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--qf-primary-soft);
+  color: var(--qf-primary);
+  font-weight: 700;
+}
+
+.steps-panel strong,
+.steps-panel small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.state,
+.inline-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--qf-space-3);
+  color: var(--qf-text-muted);
+}
+
+.state {
+  flex-direction: column;
+  padding: var(--qf-space-8) var(--qf-space-4);
+  text-align: center;
+}
+
+.inline-state {
+  justify-content: flex-start;
+  padding: var(--qf-space-3) 0;
+}
+
+.banner {
+  padding: var(--qf-space-3);
+  border-radius: var(--qf-radius-md);
+  border: 1px solid var(--qf-border);
+}
+
+.banner.error {
+  color: var(--mat-sys-error);
+  border-color: color-mix(in srgb, var(--mat-sys-error) 35%, var(--qf-border));
+  background: color-mix(in srgb, var(--mat-sys-error) 8%, var(--qf-surface));
+}
+
+@media (min-width: 760px) {
+  .workflow-form {
+    grid-template-columns: minmax(0, 1fr) 9rem auto;
+  }
+
+  .workflow-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .proposal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1180px) {
+  .approval-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

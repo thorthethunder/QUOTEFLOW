@@ -105,3 +105,16 @@ AI_KNOWLEDGE_EMBEDDING_DIMENSION=1024
 Start PostgreSQL first; embeddings are stored in QuoteFlow tables and retrieved with tenant-filtered SQL.
 QuoteFlow does not automatically pull embedding models. Use `ollama list` and `ollama pull mxbai-embed-large`
 manually if needed. See [AI_BUSINESS_KNOWLEDGE.md](AI_BUSINESS_KNOWLEDGE.md).
+
+## Agent Workflows
+
+Controlled workflows are available at `/app/workflows` when enabled.
+
+```text
+AI_ACTIONS_ENABLED=true
+AI_WORKFLOWS_ENABLED=true
+AI_WORKFLOW_MAX_PAYMENT_FOLLOW_UP_ITEMS=3
+```
+
+Phase 8 `PAYMENT_FOLLOW_UP` uses zero AI calls. It prepares existing payment reminder action proposals, so email still
+requires the normal human approval flow. See [AI_AGENT_WORKFLOWS.md](AI_AGENT_WORKFLOWS.md).

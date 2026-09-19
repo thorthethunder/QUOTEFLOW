@@ -91,3 +91,8 @@ Uses existing `EMAIL_SENDING` (Pro/Business). Re-checked at prepare and confirm.
 - [EMAIL.md](EMAIL.md)
 - [NOTIFICATIONS.md](NOTIFICATIONS.md)
 - [BUSINESS_COPILOT.md](BUSINESS_COPILOT.md)
+
+## Workflow use
+
+AI Phase 8 `PAYMENT_FOLLOW_UP` can prepare multiple payment reminder send proposals from outstanding invoices. It does
+not send email itself. Each reminder still requires the existing human review and confirm flow.

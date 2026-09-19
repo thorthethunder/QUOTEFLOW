@@ -150,6 +150,16 @@ quoteflow:
       approval-ttl: ${AI_ACTION_APPROVAL_TTL:10m}
       per-user-per-minute: ${AI_ACTION_RATE_USER:6}
       per-tenant-per-minute: ${AI_ACTION_RATE_TENANT:20}
+    workflows:
+      # Bounded durable workflow orchestration. Production should stay false until validated.
+      enabled: ${AI_WORKFLOWS_ENABLED:false}
+      max-steps: ${AI_WORKFLOW_MAX_STEPS:8}
+      max-action-proposals: ${AI_WORKFLOW_MAX_ACTIONS:3}
+      max-payment-follow-up-items: ${AI_WORKFLOW_MAX_PAYMENT_FOLLOW_UP_ITEMS:3}
+      max-ai-calls: ${AI_WORKFLOW_MAX_AI_CALLS:0}
+      ttl: ${AI_WORKFLOW_TTL:30m}
+      per-user-per-minute: ${AI_WORKFLOW_RATE_USER:3}
+      per-tenant-per-minute: ${AI_WORKFLOW_RATE_TENANT:10}
     ollama:
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
       model: ${OLLAMA_MODEL:qwen3:8b}

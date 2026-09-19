@@ -135,6 +135,7 @@ cd frontend && npm ci && npm run build
 - [AI architecture](docs/AI_ARCHITECTURE.md)
 - [AI Reporting Insights](docs/AI_REPORTING_INSIGHTS.md)
 - [AI Business Knowledge](docs/AI_BUSINESS_KNOWLEDGE.md)
+- [AI Agent Workflows](docs/AI_AGENT_WORKFLOWS.md)
 - [Cost architecture](docs/COST_ARCHITECTURE.md)
 - [Growth architecture (FUTURE)](docs/GROWTH_ARCHITECTURE.md)
 - [ADRs](docs/adr/)

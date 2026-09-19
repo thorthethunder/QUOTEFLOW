@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import jakarta.persistence.LockModeType;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -52,4 +53,33 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
 			@Param("businessId") UUID businessId,
 			@Param("startInclusive") Instant startInclusive,
 			@Param("endExclusive") Instant endExclusive);
+
+	@Query(value = """
+			SELECT
+			  i.id AS id,
+			  i.invoice_number AS invoiceNumber,
+			  i.customer_display_name AS customerDisplayName,
+			  i.customer_email AS customerEmail,
+			  i.currency AS currency,
+			  i.due_date AS dueDate,
+			  i.total_amount AS totalAmount,
+			  COALESCE(p.amount_paid, 0) AS amountPaid,
+			  (i.total_amount - COALESCE(p.amount_paid, 0)) AS balanceDue
+			FROM invoices i
+			LEFT JOIN (
+			  SELECT invoice_id, SUM(amount) AS amount_paid
+			  FROM payments
+			  WHERE business_id = :businessId
+			    AND status = 'RECORDED'
+			  GROUP BY invoice_id
+			) p ON p.invoice_id = i.id
+			WHERE i.business_id = :businessId
+			  AND i.status = 'SENT'
+			  AND (i.total_amount - COALESCE(p.amount_paid, 0)) > 0
+			ORDER BY balanceDue DESC, i.due_date NULLS LAST, i.invoice_number ASC
+			LIMIT :limit
+			""", nativeQuery = true)
+	List<OutstandingInvoiceCandidate> findTopOutstandingForPaymentFollowUp(
+			@Param("businessId") UUID businessId,
+			@Param("limit") int limit);
 }

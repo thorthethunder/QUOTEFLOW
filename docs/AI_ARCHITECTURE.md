@@ -112,8 +112,8 @@ Local Ollama: provider API monetary cost is typically zero; **compute/infrastruc
 | **AI Phase 4** | Controlled action tools + human approval | **CLOSED PASS** |
 | **AI Phase 5** | Payment Reminder Assistant + approved sending | **CLOSED PASS** |
 | **AI Phase 6** | Reporting insights | **CLOSED PASS** |
-| **AI Phase 7** | Tenant-isolated RAG | Planned |
-| **AI Phase 8** | Agent workflows | Planned |
+| **AI Phase 7** | Tenant-isolated RAG | **CLOSED PASS** |
+| **AI Phase 8** | Controlled agent workflows | **CLOSED PASS** |
 | **AI Phase 9** | Usage / cost / entitlements | Planned |
 | **AI Phase 10** | AI security / red-team | Planned |
 
@@ -135,3 +135,12 @@ instructions, and source references are backend-authoritative.
 **Correct:** Copilot → allowlisted tool → (read: business service) or (action: prepare proposal → human confirm → business service).
 
 See [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md) for Phase 4 proposal → confirm → execute.
+
+## Controlled Agent Workflows
+
+AI Phase 8 is documented in [AI_AGENT_WORKFLOWS.md](AI_AGENT_WORKFLOWS.md).
+
+The first workflow is `PAYMENT_FOLLOW_UP`. It deterministically selects outstanding invoices, prepares existing
+`PAYMENT_REMINDER_SEND` action proposals, waits for human approval, and observes proposal outcomes. It uses zero AI
+calls, has an explicit state machine, persists workflow/step rows in PostgreSQL, and does not introduce unrestricted
+tools.

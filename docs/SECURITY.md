@@ -176,3 +176,11 @@ See [AI_ACTION_APPROVALS.md](AI_ACTION_APPROVALS.md), [AI_ARCHITECTURE.md](AI_AR
 - Uploaded source types are allowlisted to authored text and TXT; PDF and arbitrary binary uploads are deferred.
 - RAG generation has no action or mutation tools.
 - Deleted and superseded chunks are removed from retrieval. See [AI_BUSINESS_KNOWLEDGE.md](AI_BUSINESS_KNOWLEDGE.md).
+
+## AI Phase 8 workflow controls
+
+- Workflows derive tenant/user scope only from the authenticated principal.
+- Workflow and step transitions are enforced by a central state machine.
+- Side effects are mediated through `AiActionProposal`; workflows cannot approve their own proposals.
+- `PAYMENT_FOLLOW_UP` uses deterministic invoice selection and zero AI calls.
+- Unknown workflow/step types and unrestricted tool requests fail closed. See [AI_AGENT_WORKFLOWS.md](AI_AGENT_WORKFLOWS.md).

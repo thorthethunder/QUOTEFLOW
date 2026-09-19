@@ -137,6 +137,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'workflows',
+        loadComponent: () =>
+          import('./features/workflows/ai-workflows-page').then(
+            (m) => m.AiWorkflowsPageComponent,
+          ),
+      },
+      {
         path: 'plan',
         loadComponent: () =>
           import('./features/plan/plan-page').then((m) => m.PlanPageComponent),

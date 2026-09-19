@@ -160,3 +160,21 @@ Business Knowledge is disabled by default with `AI_KNOWLEDGE_ENABLED=false`.
 PostgreSQL stores document/chunk rows and embeddings; no object storage is required for Phase 7 TXT/text ingestion.
 Use `OLLAMA_EMBEDDING_MODEL` and `AI_KNOWLEDGE_EMBEDDING_DIMENSION` as a compatibility pair. Changing either requires
 re-indexing tenant knowledge. See [AI_BUSINESS_KNOWLEDGE.md](AI_BUSINESS_KNOWLEDGE.md).
+
+## AI workflow operations
+
+Agent workflows are disabled by default with `AI_WORKFLOWS_ENABLED=false`. Phase 8 stores workflow and step state in
+PostgreSQL and does not require Redis or a separate worker.
+
+```text
+AI_WORKFLOWS_ENABLED=false
+AI_WORKFLOW_MAX_STEPS=8
+AI_WORKFLOW_MAX_ACTIONS=3
+AI_WORKFLOW_MAX_PAYMENT_FOLLOW_UP_ITEMS=3
+AI_WORKFLOW_MAX_AI_CALLS=0
+AI_WORKFLOW_TTL=30m
+AI_WORKFLOW_RATE_USER=3
+AI_WORKFLOW_RATE_TENANT=10
+```
+
+See [AI_AGENT_WORKFLOWS.md](AI_AGENT_WORKFLOWS.md).

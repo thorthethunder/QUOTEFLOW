@@ -192,3 +192,11 @@ Do not execute mutations from the model alone. Reminder **send** is Phase 5.
 - [SECURITY.md](SECURITY.md)
 
 Business Knowledge (`/app/knowledge`) is a separate tenant-isolated RAG surface. It retrieves tenant-owned policy text with no mutation/action tools; Copilot action approvals remain a separate workflow.
+
+## Controlled workflows
+
+AI Phase 8 adds `/app/workflows` for durable workflow coordination. The first workflow, `PAYMENT_FOLLOW_UP`, prepares
+existing payment reminder action proposals and waits for the user to approve them. It is separate from Copilot chat and
+does not grant the model any confirm or send capability.
+
+See [AI_AGENT_WORKFLOWS.md](AI_AGENT_WORKFLOWS.md).

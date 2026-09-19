@@ -86,3 +86,10 @@ Phase 5 adds **human-approved sending** (`payment_reminder_send`) via Notificati
 - [BUSINESS_COPILOT.md](BUSINESS_COPILOT.md)
 - [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md)
 - [SECURITY.md](SECURITY.md)
+
+## Workflow reuse
+
+AI Phase 8 workflows reuse `AiActionProposal` for every side-effecting step. A workflow may prepare a proposal, but it
+cannot confirm or execute it. Human approval remains the separate `/api/v1/ai/actions/{id}/confirm` call.
+
+See [AI_AGENT_WORKFLOWS.md](AI_AGENT_WORKFLOWS.md).

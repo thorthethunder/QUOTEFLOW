@@ -192,3 +192,11 @@ QuoteFlow is product #1. Keep platform capabilities (auth, tenancy, billing, ent
 Business Knowledge stores tenant-owned text/TXT policy knowledge in PostgreSQL and performs tenant-filtered retrieval in SQL before optional AI narration. The model receives only the authenticated tenant's bounded chunks and has no action tools.
 
 See [AI_BUSINESS_KNOWLEDGE.md](AI_BUSINESS_KNOWLEDGE.md).
+
+## AI Phase 8 workflow architecture
+
+Controlled agent workflows run inside the Spring Boot modular monolith and persist state in PostgreSQL. The first
+workflow, `PAYMENT_FOLLOW_UP`, reads outstanding invoices, prepares existing action proposals, waits for user approval,
+and observes proposal results. It adds no new infrastructure and no unrestricted execution surface.
+
+See [AI_AGENT_WORKFLOWS.md](AI_AGENT_WORKFLOWS.md).

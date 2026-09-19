@@ -1,0 +1,162 @@
+<section class="workflows">
+  <header class="page-header">
+    <div>
+      <h1>Agent workflows</h1>
+      <p class="subtitle">Bounded payment follow-up workflows with durable checkpoints.</p>
+    </div>
+  </header>
+
+  <form class="workflow-form" [formGroup]="form" (ngSubmit)="start()">
+    <mat-form-field appearance="outline" class="goal-field">
+      <mat-label>Goal</mat-label>
+      <input matInput formControlName="goal" maxlength="1000" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="limit-field">
+      <mat-label>Reminders</mat-label>
+      <mat-select formControlName="maxItems">
+        <mat-option [value]="1">1</mat-option>
+        <mat-option [value]="2">2</mat-option>
+        <mat-option [value]="3">3</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button mat-flat-button color="primary" type="submit" [disabled]="busy() || form.invalid">
+      <mat-icon>play_arrow</mat-icon>
+      Start
+    </button>
+  </form>
+
+  @if (error(); as err) {
+    <div class="banner error" role="alert">{{ err }}</div>
+  }
+
+  @if (loading()) {
+    <div class="state" role="status" aria-live="polite">
+      <mat-spinner diameter="36" />
+      <p>Loading workflows...</p>
+    </div>
+  } @else if (workflow(); as wf) {
+    <section class="workflow-summary" aria-label="Workflow summary">
+      <div>
+        <span>Status</span>
+        <strong>{{ wf.status }}</strong>
+      </div>
+      <div>
+        <span>Pending review</span>
+        <strong>{{ wf.summary.pendingApprovals }}</strong>
+      </div>
+      <div>
+        <span>Queued</span>
+        <strong>{{ wf.summary.executedActions }}</strong>
+      </div>
+      <div>
+        <span>Expires</span>
+        <strong>{{ wf.expiresAt | date: 'short' }}</strong>
+      </div>
+    </section>
+
+    <div class="workflow-actions">
+      <button mat-stroked-button type="button" (click)="resume()" [disabled]="busy()">
+        <mat-icon>sync</mat-icon>
+        Refresh
+      </button>
+      <button
+        mat-stroked-button
+        type="button"
+        class="danger"
+        (click)="cancelWorkflow()"
+        [disabled]="busy() || wf.status === 'CANCELLED' || wf.status === 'COMPLETED' || wf.status === 'EXPIRED'"
+      >
+        <mat-icon>cancel</mat-icon>
+        Cancel workflow
+      </button>
+    </div>
+
+    <section class="approval-list" aria-label="Reminder approvals">
+      @for (view of proposals(); track view.step.id) {
+        <article class="approval-item">
+          <header>
+            <div>
+              <p class="eyebrow">{{ view.step.status }}</p>
+              <h2>{{ view.detail?.summary || 'Payment reminder proposal' }}</h2>
+            </div>
+            @if (view.detail?.expiresAt) {
+              <span class="expires">{{ view.detail?.expiresAt | date: 'short' }}</span>
+            }
+          </header>
+
+          @if (view.loading) {
+            <div class="inline-state"><mat-spinner diameter="24" /> Loading proposal...</div>
+          } @else if (view.detail; as detail) {
+            <div class="proposal-grid">
+              <div><span>Invoice</span><strong>{{ detail.payload['invoiceNumber'] }}</strong></div>
+              <div><span>Customer</span><strong>{{ detail.payload['customerDisplayName'] }}</strong></div>
+              <div><span>Recipient</span><strong>{{ detail.payload['recipientEmail'] }}</strong></div>
+              <div><span>Outstanding</span><strong>{{ detail.payload['currency'] }} {{ detail.payload['outstandingAmount'] }}</strong></div>
+            </div>
+            @if (detail.payload['bodyPlainText']; as body) {
+              <pre class="message-preview">{{ body }}</pre>
+            }
+            @if (view.error) {
+              <div class="banner error" role="alert">{{ view.error }}</div>
+            }
+            <div class="approval-actions">
+              @if (invoiceHref(detail); as href) {
+                <a mat-stroked-button [routerLink]="href">
+                  <mat-icon>receipt_long</mat-icon>
+                  Invoice
+                </a>
+              }
+              <button
+                mat-flat-button
+                color="primary"
+                type="button"
+                [disabled]="view.busy || detail.status !== 'PENDING'"
+                (click)="approve(view)"
+              >
+                @if (view.busy) {
+                  <mat-spinner diameter="18" />
+                }
+                Approve
+              </button>
+              <button
+                mat-stroked-button
+                type="button"
+                [disabled]="view.busy || detail.status !== 'PENDING'"
+                (click)="cancelProposal(view)"
+              >
+                Cancel
+              </button>
+            </div>
+          } @else {
+            <div class="banner error" role="alert">{{ view.error }}</div>
+          }
+        </article>
+      } @empty {
+        <article class="empty-panel">
+          <h2>No pending workflow approvals</h2>
+          <p class="empty">Start a payment follow-up workflow to prepare reminders for review.</p>
+        </article>
+      }
+    </section>
+
+    <section class="steps-panel" aria-label="Workflow steps">
+      <h2>Steps</h2>
+      <ol>
+        @for (step of wf.steps; track step.id) {
+          <li>
+            <span>{{ step.stepNumber }}</span>
+            <div>
+              <strong>{{ step.stepType }}</strong>
+              <small>{{ step.classification }} · {{ step.status }}</small>
+            </div>
+          </li>
+        }
+      </ol>
+    </section>
+  } @else {
+    <article class="empty-panel">
+      <h2>No workflow yet</h2>
+      <p class="empty">Start with payment follow-up to prepare reminder proposals for review.</p>
+    </article>
+  }
+</section>
