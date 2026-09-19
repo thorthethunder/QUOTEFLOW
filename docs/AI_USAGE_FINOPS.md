@@ -55,12 +55,16 @@ Provider costs are estimated by `AiCostCatalog` with `BigDecimal`.
 - Local `OLLAMA` usage is known zero cost and is stored as `0.00000000 USD`.
 - Deterministic hash embeddings used in tests/development are known zero cost.
 - Unknown provider or model prices are stored as `NULL`, never silently treated as zero.
+- Explicit provider cost estimates are stored as historical event snapshots. Later catalog changes must not rewrite existing ledger rows.
 
 The frontend AI usage page intentionally does not display provider cost. Cost data is platform operations metadata, not tenant billing proof.
 
 ## Operational Notes
 
 - The current policy is centralized but not yet database-admin configurable.
+- Phase 9 meters customer-facing AI allowances and provider API metadata. It does not meter infrastructure spend such as CPU, GPU, RAM, disk, or network egress.
+- Failed provider calls may still create technical usage events, but customer allowances are consumed only through the entitlement gate before a customer-facing AI operation is attempted.
+- Platform-wide FinOps dashboards, catalog admin screens, ledger exports, retention automation, and adjustment workflows are intentionally deferred.
 - Commercial plan changes should update `AiUsagePolicy` and add regression tests for upgrade, downgrade, disabled feature, and limit exhaustion behavior.
 - The ledger is append-only at the application layer. Corrections should be additive adjustment events in a future admin workflow, not destructive updates.
 - Retention and export policy are future operations work; until then, the ledger contains only metadata suitable for operational usage review.
